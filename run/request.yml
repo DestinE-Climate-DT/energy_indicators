@@ -1,0 +1,154 @@
+EXPERIMENT:
+   DATELIST: 19900101 #Startdate
+   MEMBERS: fc0
+   CHUNKSIZEUNIT: month
+   CHUNKSIZE: 1
+   NUMCHUNKS: 60 #5 years
+   CALENDAR: standard
+
+1:
+   GSVREQUEST: #raw data
+      dataset: climate-dt
+      class: d1
+      type: fc
+      expver: "%RUN.READ_EXPID%" #low res: a063, high res: a06x, default: hz9n
+      stream: clte 
+      activity: CMIP6
+      resolution: high #standard for low-res
+      generation: 1
+      realization: 1
+      experiment: hist
+      model: IFS-NEMO 
+      levtype: "hl" #sfc for surface, hl for height levels, pl for pressure levels
+      levelist: 100 
+      date: "%CHUNK_START_DATE%/to/%CHUNK_SECOND_TO_LAST_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: ["100u","100v"]
+      grid: "0.1/0.1"
+      method: nn   
+      area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+   JOBS:
+      OPA:
+         CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --mem=224G']"
+         WALLCLOCK: '00:45'
+         PARTITION: 'ju-standard'
+      APP:
+         CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --mem=224G']"
+         WALLCLOCK: '01:00'
+         PARTITION: 'ju-standard'
+
+   APP:
+      other: "empty"
+
+   OPAREQUEST:
+   NSTATS: "4"
+   1: # 1hourly u100 wind component
+      variable: "100u"
+      stat: "raw"
+      stat_freq: "hourly"
+      output_freq: "weekly"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%HPCROOTDIR%/tmp/"
+      save_filepath: "%HPCROOTDIR%/tmp/"
+   2: # 1hourly v100 wind component
+      variable: "100v"
+      stat: "raw"
+      stat_freq: "hourly"
+      output_freq: "weekly"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%HPCROOTDIR%/tmp/"
+      save_filepath: "%HPCROOTDIR%/tmp/"
+   3: # Daily u100 wind component
+      variable: "100u"
+      stat: "mean"
+      stat_freq: "daily"
+      output_freq: "monthly"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%HPCROOTDIR%/tmp/"
+      save_filepath: "%HPCROOTDIR%/tmp/"
+   4: # Daily v100 wind component
+      variable: "100v"
+      stat: "mean"
+      stat_freq: "daily"
+      output_freq: "monthly"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%HPCROOTDIR%/tmp/"
+      save_filepath: "%HPCROOTDIR%/tmp/"
+
+2:
+   GSVREQUEST: #raw data
+      dataset: climate-dt
+      class: d1
+      type: fc
+      expver: "%RUN.READ_EXPID%" #low res: a063, high res: a06x, default: hz9n
+      stream: clte
+      activity: CMIP6
+      resolution: high #standard for low-res
+      generation: 1
+      realization: 1
+      experiment: hist
+      model: IFS-NEMO
+      levtype: "sfc" #sfc for surface, hl for height levels, pl for pressure levels
+      date: "%CHUNK_START_DATE%/to/%CHUNK_SECOND_TO_LAST_DATE%"
+      time: "0000/to/2300/by/0100"
+      param: ["2t"]
+      grid: "0.1/0.1"
+      method: nn
+      area: [72.1, -25.1, 26.9, 45.1] #Europe
+
+   JOBS:
+      OPA:
+         CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --mem=224G']"
+         WALLCLOCK: '00:45'
+         PARTITION: 'ju-standard'
+      APP:
+         CUSTOM_DIRECTIVES: "['#SBATCH --exclusive', '#SBATCH --mem=224G']"
+         WALLCLOCK: '01:00'
+         PARTITION: 'ju-standard'
+   
+   APP:
+      other: "empty" 
+
+
+   OPAREQUEST:
+   NSTATS: "3"
+   1: # Minimum daily temperature
+      variable: "2t"
+      stat: "min"
+      stat_freq: "daily"
+      output_freq: "monthly"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%HPCROOTDIR%/tmp/"
+      save_filepath: "%HPCROOTDIR%/tmp/"
+   2: # Maximum daily temperature
+      variable: "2t"
+      stat: "max"
+      stat_freq: "daily"
+      output_freq: "monthly"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%HPCROOTDIR%/tmp/"
+      save_filepath: "%HPCROOTDIR%/tmp/"
+   3: # Mean daily temperature
+      variable: "2t"
+      stat: "mean"
+      stat_freq: "daily"
+      output_freq: "monthly"
+      time_step: 60 # in minutes, 60*timestep length in hours TODO: do that automatically
+      save: True
+      checkpoint: True
+      checkpoint_filepath: "%HPCROOTDIR%/tmp/"
+      save_filepath: "%HPCROOTDIR%/tmp/"
+

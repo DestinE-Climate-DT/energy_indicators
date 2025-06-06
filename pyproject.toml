@@ -1,0 +1,8 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+# Default versioning behavior, use the version tag from Git
+version_scheme = "post-release"
+local_scheme = "node-and-date"
