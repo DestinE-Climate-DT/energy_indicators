@@ -1,213 +1,514 @@
-# Climate DT (DE_340) workflow
+# Energy Indicators (formely Energy Onshore)
 
-Welcome to the Climate DT Workflow documentation!
+![latest_release](https://earth.bsc.es/gitlab/digital-twins/de_340-2/energy_onshore/-/badges/release.svg)
 
-## Getting Started
+This repository contains the scripts related to the Energy Onshore - Energy indicators use case of the Climate Adaptation Digital Twin (Climate DT). All the work is being developed in the frame of the [Destination Earth initiative](https://destination-earth.eu/) from the European Commission, where [ECMWF](https://destine.ecmwf.int/) is one of the Entrusted Entities.
 
-All the experiments should be created in the [Autosubmit Virtual Machine](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM). To access the VM, you need a user and your SSH key to be authorized. Add your name, e-mail, preferred username, and SSH (local) public key to the [table](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM+Users).
+LICENSE NOTE: the European Union, represented by the European Commission is the direct and sole owner of the intellectual property rights of these Results. 
 
-Make sure you have a recent Autosubmit version running `autosubmit --version`. Check by doing `module spider autosubmit` and then selecting the latest version of Autosubmit. The version of Autosubmit that has been used for each release can also be found in the [CHANGELOG.md](CHANGELOG.md). You can follow more detailed description about Autosubmit in [Autosubmit Readthedocs](https://autosubmit.readthedocs.io/en/master/).
+## Description
 
-### Prerequisites
+The Energy Onshore application is currently being developed as a Python package, with two core scripts, `wind.py`, containing a comprehensive set of wind energy indicators and `solar.py`, containing a limited set of solar energy indicators, supporting scripts containing auxiliary functions for data pre- and post-processing, `core.py`, and a wrapper script to envelope the whole structure, `run_energy_onshore.py`.
 
-Inside the Autosubmit VM, you need to put your user configurations for platforms somewhere (we recommend `~/platforms.yml`):
+## Implemented indicators
+
+### Wind energy indicators:
+
+- **Wind Speed Anomalies** \
+    Wind anomalies compared to a 30-year baseline reference period.
+- **Wind Power Density (WPD)** \
+    Amount of energy available in wind at a given location.
+- **Capacity Factor (CF)** \
+    Ratio of actual energy produced by a wind turbine compared to its maximum theoretical output.
+- **Capacity Factor Histogram** \
+    Histogram of capacity factors over a 2D grid.
+- **Capacity Factor Histogram (1D)** \
+    Histogram of capacity factors at a given location.
+- **Wind Speed Histogram** (now comes from the OPA)\
+    Histogram of wind speed over a 2D grid.
+- **Wind Speed Histogram (1D)** (now comes from the OPA)\
+    Histogram of wind speed at a given location.
+- **Annual Energy Production (AEP)** \
+    Energy produced by a wind turbine / wind farm over a year.
+- **High Wind Events** \
+    Number of times wind speed exceeds a given threshold.
+- **Low Wind Events** \
+    Number of times wind speed is below a given threshold.
+- **Cooling Degree Days (CDD)** \
+    Weather-based index designed to describe the energy requirements of buildings in terms of cooling.
+- **Heating Degree Days (HDD)** \
+    Weather-based index designed to describe the energy requirements of buildings in terms of heating.
+
+<Details>
+
+- **Wind speed anomalies**: `wind_speed_anomalies(ws, climatology, scale='daily')` \
+Compute the wind speed anomalies.
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude.
+        - `climatology: xarray.DataArray ; (time,lat,lon)` -> Climatology of wind speed over a 30-year reference period.
+        - `scale: str` -> Temporal scale of the climatology. Options are 'daily', 'monthly' and 'yearly'. (default: 'daily')
+
+    - Output:
+        - `ws_anom: xarray.DataArray ; (time,lat,lon)` -> Wind speed anomalies.
+
+    - References \
+        [1]: 
+
+- **Wind power density**: `wind_power_density(ws, air_density=1.225)` \
+Compute the wind power density.
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude.
+        - `air_density: float` -> Air density. Default value is 1.225 kg m^(-3).
+
+    - Output:
+        - `wpd: xarray.DataArray ; (time,lat,lon)` -> Wind power density.
+
+    - References \
+        [1]: 
+
+- **Capacity factor**: `capacity_factor(ws, iec_class)` \
+Compute the capacity factor of a wind turbine.
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
+        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
+
+    - Output:
+        - `cf: xarray.DataArray ; (time,lat,lon)` -> Capacity factor.
+
+    - References \
+        [1]: https://doi.org/10.1016/j.renene.2019.04.135
+
+- **Capacity factor histogram**: `capacity_factor_histogram(ws, bins, iec_class)` \
+Compute the capacity factor histogram of a wind turbine over a 2D grid. 
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
+        - `bins: int` -> Number of bins.
+        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
+    
+    - Output:
+        - `counts: xarray.DataArray ; (bins,lat,lon)` -> Number of counts in each bin.
+        - `bin_edges: xarray.DataArray ; (bins+1,lat,lon)` -> Bin edges.
+
+    - References \
+        [1]: https://doi.org/10.1016/j.renene.2019.04.135
+
+- **Capacity factor histogram (1D)**: `capacity_factor_histogram_1D(ws, bins, target_lon, target_lat, iec_class)` \
+Compute the capacity factor histogram of a wind turbine at a given location.
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
+        - `bins: int` -> Number of bins.
+        - `target_lon: float` -> Longitude of the target location.
+        - `target_lat: float` -> Latitude of the target location.
+        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
+
+    - Output:
+        - counts: xarray.DataArray ; (bins) -> Number of counts in each bin.
+        - bin_edges: xarray.DataArray ; (bins+1) -> Bin edges.
+
+    - References \
+        [1]: https://doi.org/10.1016/j.renene.2019.04.135
+
+- **Wind speed histogram**: `wind_speed_histogram(ws, bins)` \
+Compute the wind speed histogram over a 2D grid.
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
+        - `bins: int` -> Number of bins.
+    
+    - Output:
+        - `counts: xarray.DataArray ; (bins,lat,lon)` -> Number of counts in each bin.
+        - `bin_edges: xarray.DataArray ; (bins+1,lat,lon)` -> Bin edges.
+
+    - References \
+        [1]: https://numpy.org/doc/stable/reference/generated/numpy.apply_along_axis.html \
+        [2]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
+
+- **Wind speed histogram (1D)**: `wind_speed_histogram_1D(ws, bins, target_lon, target_lat)` \
+Compute the wind speed histogram at a given location.
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
+        - `bins: int` -> Number of bins.
+        - `target_lon: float` -> Longitude of the target location.
+        - `target_lat: float` -> Latitude of the target location.
+    
+    - Output:
+        - `counts: xarray.DataArray ; (bins) -> Number of counts in each bin.
+        - `bin_edges: xarray.DataArray ; (bins+1) -> Bin edges.
+
+    - References \
+        [1]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
+
+- **Annual energy production**: `annual_energy_production_wind(capacity_factor, rated_power, num_turbines=1)` \
+Compute the annual energy production of a wind turbine from its capacity factor time series.
+    - Input:
+        - `capacity_factor: xarray.DataArray ; (time)` -> Capacity factor.
+        - `rated_power: float / int` -> Rated power of the wind turbine in MW.
+        - `num_turbines: int` -> Number of wind turbines. (default: 1)
+
+    - Output:
+        - `aep: xarray.DataArray ; (time)` -> Annual energy production in MWh.
+
+    - References \
+        [1]: https://doi.org/10.1016/j.renene.2019.04.135
+
+- **High wind events**: `high_wind_events(ws, threshold=25.0)` \
+Compute where and when wind speed exceeds a given threshold (cut-out speed).
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
+        - `threshold: float` -> Wind speed threshold (default: 25.0 m/s). Cut-out speed of the wind turbine.
+
+    - Output:
+        - `hwe: xarray.DataArray ; (lat,lon)` -> Number of high wind events.
+
+- **Low wind events**: `low_wind_events(ws, threshold=3.0)` \
+Compute where and when wind speed is below a given threshold (cut-in speed).
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
+        - `threshold: float` -> Wind speed threshold (default: 3.0 m/s). Cut-in speed of the wind turbine.
+
+    - Output:
+        - `lwe: xarray.DataArray ; (lat,lon)` -> Number of low wind events.
+
+- **Cooling degree days**: `cooling_degree_days(tm, tx, tn, base=22.0)` \
+Compute the average cooling degree days. Requires daily mean, maximum and minimum temperature.
+    - Input:
+        - `tm: xarray.DataArray ; (time,lat,lon)` -> Mean temperature.
+        - `tx: xarray.DataArray ; (time,lat,lon)` -> Maximum temperature.
+        - `tn: xarray.DataArray ; (time,lat,lon)` -> Minimum temperature.
+        - `base: float` -> Base temperature (default: 22.0°C). Depends on the region/country considered.
+    
+    - Output:
+        - `cdd: xarray.DataArray ; (time,lat,lon)` -> Cooling degree days.
+        - `cdd_acc: xarray.DataArray ; (lat,lon)` -> Total accumulated cooling degree days.
+
+    - References \
+        [1]: https://doi.org/10.1002/joc.3959
+
+- **Heating degree days**: `heating_degree_days(tm, tx, tn, base=15.5)` \
+Compute the average heating degree days. Requires daily mean, maximum and minimum temperature.
+    - Input:
+        - `tm: xarray.DataArray ; (time,lat,lon)` -> Mean temperature.
+        - `tx: xarray.DataArray ; (time,lat,lon)` -> Maximum temperature.
+        - `tn: xarray.DataArray ; (time,lat,lon)` -> Minimum temperature.
+        - `base: float` -> Base temperature (default: 15.5°C). Depends on the region/country considered.
+    
+    - Output:
+        - `hdd: xarray.DataArray ; (time,lat,lon)` -> Heating degree days.
+        - `hdd_acc: xarray.DataArray ; (lat,lon)` -> Total accumulated heating degree days.
+
+    - References \
+        [1]: https://doi.org/10.1002/joc.3959
+
+</Details>
+
+### Solar energy indicators:
+
+- **Solar Capacity Factor (daily)** \
+    Capacity factor of a PV solar panel at daily scale.
+- **Annual Energy Production (daily)** \
+    Annual energy production of a PV solar panel at daily scale.
+
+<Details>
+
+- **Solar Capacity Factor (daily)**: `solar_capacity_factor_daily(t2c, rsds)` \
+Compute the capacity factor of a PV solar panel at daily scale.
+    - Input:
+        - `t2c: xarray.DataArray ; (time,lat,lon)` -> Daily temperature at 2m in °C.
+        - `rsds: xarray.DataArray ; (time,lat,lon)` -> Daily surface solar radiation donwnwards in W m^(-2).
+    
+    - Output:
+        - `cf_daily: xarray.DataArray ; (time,lat,lon)` -> Daily capacity factor.
+
+    - References \
+        [1]: https://doi.org/10.1016/j.renene.2015.10.006 \ 
+        [2]: https://doi.org/10.1038/ncomms10014
+
+- **Annual Energy Production (daily)**: `annual_energy_production_daily(capacity_factor, rated_power, num_panels=1)` \
+Compute the annual energy production of a PV solar panel.
+    - Input:
+        - `capacity_factor: xarray.DataArray ; (time)` -> Capacity factor time series for a year.
+        - `rated_power: float / int` -> Rated power of the solar panel in kW.
+        - `num_panels: int` -> Number of solar panels. (default: 1)
+
+    - Output:
+        - `aep_daily: xarray.DataArray ; (time)` -> Annual energy production in kWh.
+
+</Details>
+
+## Version
+Current version can be found at the latest publised tags in the git information.
+
+## How to run
+
+Each function/indicator includes a description of its aim, inputs, outputs and corresponding references. The following is an example of how to run the `capacity_factor` function in a Jupyter Notebook / Python environment:
 
 ```
-# personal platforms file
-# this overrides keys the default platforms.yml
+import xarray as xr
+from energy_onshore.core import wind_speed
+from energy_onshore import capacity_factor
 
-Platforms:
-  lumi-login:
-    USER: <USER>
-  lumi:
-    USER: <USER>
-  marenostrum5:
-    USER: <USER>
-  marenostrum5-login:
-    USER: <USER>
+# Load wind speed data
+path_to_data = 'path/to/data/'
+data = xr.open_dataset(path_to_data + 'data.nc')
+data.close()
+
+u100 = data['u']
+v100 = data['v']
+
+# Compute wind speed
+ws = wind_speed(u100, v100)
+
+# Compute capacity factor
+cf = capacity_factor(ws, iec_class='I')
+
+# Save capacity factor to netCDF
+path_to_output = 'path/to/output/'
+cf.to_netcdf(path_to_output + 'capacity_factor.nc')
 ```
 
-You also need to configure password-less access to the platforms where you want to run
-experiments. Further instructions can be found [here](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+VM) (Section 4. How to get password-less access from VM to LUMI / MN5).
-The workflow can run as a `local` project or as a `git` project.
+The same procedure can be followed for the rest of the indicators, adjusting the input data and parameters accordingly.
 
-### Create your own experiment
+## Input & Processing
 
-1. Create an Autosubmit experiment using minimal configurations.
+The different indicators are built to work with data array objects from the `xarray` library: `xarray.DataArray`
 
-> **NOTE**: you MUST change `<TYPE_YOUR_PLATFORM_HERE>` below with your platform, and add a description.
-For example: lumi or marenostrum5
-> Check the available platforms at `/appl/AS/DefaultConfigs/platforms.yml`
-> or `~/platforms.yml` if you created this file in your home directory.
+Several support functions have been implemented to facilitate the pre-processing of input data. These functions are included in `core.py`
+
+<Details>
+
+- `check_temperature(data)`
+Check if temperature is in Kelvin or Celsius. 
+    - Input:
+        - `data: xarray.Dataset / xarray.DataArray` -> Temperature data.
+    
+    - Output:
+        - `unit: str` -> Temperature unit of the data. Possible values are 'C' (Celsius) and 'K' (Kelvin).
+
+- `convert_temperature(t, unit='C')`
+Convert temperature from Kelvin to Celsius or from Celsius to Kelvin.
+    - Input:
+        - `t: xarray.DataArray ; (time,lat,lon)` -> Temperature.
+        - `unit: str` -> Unit to convert to (default: 'C').
+    
+    - Output:
+        - `t_conv: xarray.DataArray ; (time,lat,lon)` -> Converted temperature.
+
+- `wind_speed(u, v)`
+Compute wind speed magnitude from u and v components.
+    - Input:
+        - `u: xarray.DataArray ; (time,lat,lon)` -> U-component of wind.
+        - `v: xarray.DataArray ; (time,lat,lon)` -> V-component of wind.
+    
+    - Output:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude.
+
+- `wind_direction(u, v)`
+Compute wind direction from u and v components.
+    - Input:
+        - `u: xarray.DataArray ; (time,lat,lon)` -> U-component of wind.
+        - `v: xarray.DataArray ; (time,lat,lon)` -> V-component of wind.
+    
+    - Output:
+        - `wd: xarray.DataArray ; (time,lat,lon)` -> Wind direction.
+
+- `cosine_sza_hourly(start_date, end_date, lats, lons)`
+Computes the cosine of the Solar Zenith Angle (SZA).
+    - Input:
+        - `start_date: numpy.datetime64` -> Start date for the time period of interest.
+        - `end_date: numpy.datetime64` -> End date for the time period of interest.
+        - `lats: numpy.ndarray` -> Latitude values.
+        - `lons: numpy.ndarray` -> Longitude values.
+    
+    - Output:
+        - `cossza: xarray.DataArray ; (time,lat,lon)` -> Cosine of the Solar Zenith Angle.
+
+- `percentile(var, percentile, axis=0)`
+Compute percentile of a variable along a given axis (i.e. dimension).
+    - Input:
+        - `var: xarray.DataArray ; (time,lat,lon)` -> Variable.
+        - `percentile: float` -> Percentile to compute (0 to 100).
+        - `axis: int` -> Axis along which to compute the percentile. Default is 0 (time dimension).
+    
+    - Output:
+        - `perc: xarray.DataArray ; (lat,lon)` -> Percentile of the variable.
+
+- `moving_average(data, window_size)`
+Compute the moving average of a variable for the previous 'window_size' time steps.
+    - Input:
+        - `data: xarray.DataArray ; (time,lat,lon)` -> Variable.
+        - `window_size: int` -> Window size of the moving average.
+
+    - Output:
+        - `avg: xarray.DataArray ; (time,lat,lon)` -> Moving average of the variable.
+
+- `temporal_rescaling(var, scale='None')`
+Rescale a variable to a different temporal frequency.
+    - Input:
+        - `var: xarray.DataArray ; (time,lat,lon)` -> Variable.
+        - `scale: str` -> Temporal frequency to which the variable is rescaled. Possible values are
+        'daily', 'weekly', 'monthly', 'annual', and 'seasonal'. Default is 'None'.
+    
+    - Output:
+        - `out: xarray.DataArray ; (time,lat,lon)` -> Rescaled variable.
+
+- `select_point(data, target_lon, target_lat)`
+Select the closest point from a data array based on a longitude and latitude of interest.
+    - Input:
+        - `data: xarray.DataArray ; (time,lat,lon)` -> Data array from which the point is selected.
+        - `target_lon: float` -> Longitude of interest.
+        - `target_lat: float` -> Latitude of interest.
+    
+    - Output:
+        - `out: xarray.DataArray ; (time)` -> Data array at closest point.
+
+- `select_region(data, latbox, lonbox)`
+Select a rectangular region from a DataArray based on a longitude and latitude box.
+    - Input:
+        - `data: xarray.DataArray ; (time,lat,lon)` -> Data array from which the region is selected.
+        - `lonbox: tuple / list` -> Longitude box (min, max).
+        - `latbox: tuple / list` -> Latitude box (min, max).
+    
+    - Output:
+        - `out: xarray.DataArray ; (time,lat,lon)` -> Data array at selected region.
+
+- `create_dataset(vars, attrs, coords, dims)`
+Creates an xarray dataset with the specified variables, coordinates, dimensions and attributes. Inputs are provided as dictionaries.
+    - Input:
+        - `vars: dict` -> A dictionary where keys are the variable names and values are numpy arrays or lists.
+        - `attrs: dict` -> A dictionary where keys are the variable names and values are numpy arrays or lists. 
+        - `coords: dict` -> A dictionary where keys are the coordinate names and values are numpy arrays or lists.
+        - `dims: tuple` -> A tuple of dimension names in the order they should appear in the dataset.
+    
+    - Output:
+        - `ds: xarray.Dataset` -> An xarray Dataset containing the specified variables, attributes, coordinates and dimensions.
+
+- `get_type(x)`
+Return the type of the variable in string format. Checks if variable is of the correct type.
+    - Input:
+        - `x: any` -> Variable to check. 'x' can be of any type.
+    
+    - Output:
+        - `type: str` -> Variable type in string format.
+
+- `check_dims(data, n_dims)`
+Check if the number of dimensions of a xarray data structure is correct.
+    - Input:
+        - `data: xarray.Dataset / xarray.DataArray / list of xarray.Dataset / list of xarray.DataArray` -> Data structure to check.
+        - `n_dims: int` -> Number of dimensions. Default is 3.
+
+    - Output:
+    If the number of dimensions is correct, return None. Otherwise, raise an error.
+
+</Details>
+
+## Output & Visualization
+
+The output of the functions follows the same `xarray.DataArray` structure and can be directly stored in netCDF format. As of now, the package does not include a visualization module, but it is planned to be implemented in future versions.
+
+## Roadmap
+
+Next versions will include a visualization module to plot the results of the different indicators.
+
+## Dependencies
+
+- `xarray`
+- `numpy`
+- `scipy`
+- `pandas`
+- `datetime`
+
+## Support
+
+For any feedback, comments and/or issues you can contact me through Gitlab or directly by email at aleksander.lacima@bsc.es
+
+-------
+To install the necessary dependencies for the package:
+```
+pip install git+https://earth.bsc.es/gitlab/digital-twins/de_340/energy_onshore.git@main
+```
+
+To copy the repository to your local directory:
+```
+git clone https://earth.bsc.es/gitlab/digital-twins/de_340/energy_onshore.git
+```
+
+To install the package locally from the root directory (where the `setup.py` file is located):
+```
+pip install .
+```
+
+To check the version of the package in Python:
+```
+>>> import energy_onshore
+>>> energy_onshore.__version__
+```
+
+If you are installing the demonstrator version from Github:
 
 ```
-autosubmit expid \
-  --description "A useful description" \
-  --HPC <TYPE_YOUR_PLATFORM_HERE> \
-  --minimal_configuration \
-  --git_as_conf conf/bootstrap/ \
-  --git_repo https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow \
-  --git_branch <latest minor tag>
+pip install git+https://github.com/DestinE-Climate-DT/energy_onshore_demonstrator.git@main
+
+git clone https://github.com/DestinE-Climate-DT/energy_onshore_demonstrator.git
 ```
 
-> **NOTE:** Do not forget to change the keys between `< >`
+## How to test:
 
-You will receive the following message: `Experiment <expid> created`, where `<expid>`
-is the identifier of your experiment. A directory will be created for your experiment
-at: `/appl/AS/AUTOSUBMIT_DATA/<expid>`.
-
-Basic instructions to execute the workflow with Autosubmit can be found in [How to run](https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow/-/wikis/How-to-run). The rest of the documentation is available in the same [Wiki](https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow/-/wikis/home).
-
-2. Start the interactive command line to setup the main characteristics of your experiment: write(models), read(apps,simless) or streaming(end-to-end); simulation mode: historical, projection, control
+1. Clone the repository 
 
 ```
-# type anywhere in the virtual machine
-autosubmit create <expid>
+git clone https://earth.bsc.es/gitlab/digital-twins/de_340-2/energy_onshore.git
 ```
 
-> **NOTE:** You are asked to introduce the credentials to the remote repositories, therefore you must have access to it to proceed.
-
-You will be further asked to select the type of workflow you want to run:
+2. Create a virtual environment
 
 ```
-Choose a workflow:
-1. model
-2. end_to_end
-3. app
-4. simless
-Enter your choice (1/2/3/4):
+python -m venv venv
 ```
 
-Depending on the option that you select you will be further asked for details on the simulation you want to run, such as what model or applications you want to run and for what period.
+3. activate environment
 
-> **NOTE:** you are asked to edit the document in vim, start the edition by typing 'i', edit it and save it by typing ':wq'.
-> If you have any doubts when editing the main configuration file, read carefully the keys description in `docs/source/keys_main.rst`.
-
-You will be popped up with a pdf of the structure o fthe workflow that you just have chosen. In this moment the experiment is as well visible [in the GUI](https://climatedt-wf.csc.fi/).
-
-3. After your experiment is defined and you are fine with what you see in the image or in the GUI, you can do `autosubmit run $expid` to run your experiment.
-
-> **Congratulations: you have created your minimal workflow! To know more about advanced workflow features, keep reading the README or dig into the [general documentation](https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow/-/wikis/home#docs).**
-
-### Run your experiment
-
-If you want to update the git repository refresh your experiment (equivalent to a git pull):
-
-> **BE CAREFUL!** This command will overwrite any changes in the local project folder.
-> Note that this is doing the same thing that the `autosubmit create` did in a previous
-> step, but `autosubmit create` only refreshes the git repository the first time it is
-> executed:
-
-```bash
-autosubmit refresh <expid>
+```
+source venv/bin/activate
 ```
 
-Then you need autosubmit to create the updated the workflow files again:
+4. pip install in edit mode `-e` and with the testing dependencies `[test]`
 
-```bash
-autosubmit create <expid> -v -np
+```
+pip install -e .[test]
 ```
 
-This resets the status of all the jobs, so if you do not want to run everything from
-the beginning again, you can set the status of tasks, for example:
+5. Run pytest
 
-```bash
-autosubmit setstatus a002 -fl "a002_LOCAL_SETUP a002_SYNCHRONIZE a002_REMOTE_SETUP" -t COMPLETED -s
+```
+pytest .
 ```
 
-`-fl` is for filter, so you filter them by job name now, `-t` is for target status(?)
-so, we set them to `COMPLETED` here. `-s` is for save, which is needed to save the
-results to disk.
+6. Advanced: use pytest to debug tests.
 
-You can add a `-np` for “no plot” to most of the commands to not have the error with
-missing `xdg-open`, etc.
-
-## Documentation
-
-Basic instructions to execute the workflow with Autosubmit can be found in [How to run](https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow/-/wikis/How-to-run). The rest of the documentation is available in the same [Wiki](https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow/-/wikis/home).
-
-To build the online version of the documentation you must clone the repo (`git clone https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow.git`) and:
-
-```bash
-# Maybe activate a venv or conda environment?
-make docs-html
+```
+pytest --pdb
 ```
 
-This will build the documentation in the folder `docs/build/html`. To access the documentation you can then click on `index.html` which will open the webpage docs (or open `index.html` in your favourite browser, e.g. `firefox index.html`), or start a web server and server it locally, for instance:
+## How to crete the stac catalog from the output:
 
-```bash
-cd $workflow_code_root/
-python -m http.server -d docs/build/html/ 8000
+### Non-DestinE catalog:
+
+1. create a `data` directory, where you store your output.
+
+```
+mkdir data
 ```
 
-And then navigate to <http://localhost:8000/>.
+2. run the `generate_stac_catalog.py` sctipt (one dir above `data`).
 
-The documentation can also be built in pdf, using:
-
-```bash
-make docs-latexpdf
+```
+python3 generate_stac_catalog.py
 ```
 
-This will build the documentation in `docs/build/latex/climatedtworkflow.pdf`.
+### Catalog to be transferred to the Eumetsat Datalake:
 
-## Contributing
+Follow these instructions https://destine-data-lake-docs.data.destination-earth.eu/en/latest/dedl-discovery-and-data-access/User-Generated-Data/Promote-user-data-to-become-DestinE-data/Promote-user-data-to-become-DestinE-data.html#step-4-data-preparation
 
-This workflow is work in progress, and suggestions and contributions are greatly appreciated. If you have a suggestion, desire some new feature, or detect a bug, please:
-
-1. Open an issue in this GitLab explaining it.
-2. Once the issue is completely defined and assigned to someone, it will be tagged with the `to do` label.
-3. Once someone is working in the issue, it will be tagged with the `working on` label.
-
-If you want to develop yourself:
-
-1. Create an experiment in the VM.
-2. Set up your environment like explained in [Development environment](https://earth.bsc.es/gitlab/digital-twins/de_340-2/workflow/-/blob/main/docs/source/getting_started.rst).
-3. Create a branch locally and make the changes that you want to implement. Make use of the [Shell Style Guide](urlhttps://google.github.io/styleguide/shellguide.html).
-4. Test your changes.
-5. Once you tested the workflow, add, commit and push your changes into a new branch. You can manually run all the pre-commit actions (for linting the yaml files, for example) by running `pre-commit run --all-files`.
-6. Create a merge request. The pipeline will apply [Shellcheck](https://www.shellcheck.net/), `shfmt` and [ruff](https://docs.astral.sh/ruff/) to your code.
-7. The workflow developers will test it and merge.
-
-A Makefile with various tests, coverage analytics, formatting, etc. is available. As the tests use a ClimateDT container, GitHub access tokens are required. Ask for access to the [ClimateDT Container Recipes](https://github.com/DestinE-Climate-DT/ContainerRecipes) repository and follow the instructions to set up the token auth environment correctly.
-
-If you modified template Shell scripts, please remember to run the tests:
-
-```bash
-make test
-```
-
-The command above binds the current directory to the `/code` directory inside the container. It is recommended to run the command above (or `bats` directly) from the project root directory (e.g. from `./workflow/`).
-
-If you want to see the code coverage for the current tests, you can use:
-
-```bash
-make coverage
-```
-
-This command uses a `Docker` container with both `bats`, support libraries (`bats-assert` and `bats-support`), and `kcov` installed. It will create a local folder `./coverage/` with the HTML coverage report produced
-by `kcov`. You can visualize it by opening `./coverage/index.html` in a browser.
-
-## Contact us
-
-For any doubts or issues you can contact the workflow developers:
-
-- Miguel Castrillo (Activity leader): **miguel.castrillo[@]bsc.es**
-- Leo Arriola (ICON Workflow developer): **leo.arriola[@]bsc.es**
-- Sebastian Beyer (IFS-FESOM Workflow developer): **sebastian.beyer[@]awi.de**
-- Francesc Roura Adserias (Applications Workflow developer): **francesc.roura[@]bsc.es**
-- Ivan Alsina (Applications workflow developer): **ivan.alsina[@]bsc.es**
-- Aina Gaya (IFS-NEMO Workflow developer): **aina.gayayavila[@]bsc.es**
-- Damien McClain (IFS-NEMO workflow developer): **damien.mcclain[@]bsc.es**
-
-Main Autosubmit support:
-
-- Daniel Beltrán **daniel.beltran[@]bsc.es**
-- Bruno de Paula Kinoshita **bruno.depaulakinoshita[@]bsc.es**
-
-[Link to the Autosubmit tutorial & Hands-on](https://wiki.eduuni.fi/display/cscRDIcollaboration/Autosubmit+introductory+session)
-
-## License
+### Liscence
 
 Copyright 2022-2025 European Union (represented by the European Commission)
-
-The ClimateDT workflow is distributed as open-source software under Apache 2.0 License. The copyright owner is the European Union, represented by the European Commission. The development of the ClimateDT workflow has been funded by the European Union through Contract DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT). Further info can be found at <https://destine.ecmwf.int/> and <https://destination-earth.eu/>
+The Energy Indicators package is distributed as open-source software under Apache 2.0 License. The copyright owner is the European Union, represented by the European Commission. The development of the Energy Indicators package has been funded by the European Union through Contract DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT). Further info can be found at https://destine.ecmwf.int/ and https://destination-earth.eu/
