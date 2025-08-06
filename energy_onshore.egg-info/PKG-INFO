@@ -1,0 +1,43 @@
+Metadata-Version: 2.4
+Name: energy_onshore
+Version: 1.1.0.post1+g360603f.d20250806
+Summary: Library to compute wind energy indicators.
+Home-page: https://earth.bsc.es/gitlab/digital-twins/de_340-2/energy_onshore
+Author: Aleksander Lacima, Francesc Roura-Adserias
+Author-email: aleksander.lacima@bsc.es, francesc.roura@bsc.es
+Requires-Python: >3.9
+License-File: LICENSE
+Requires-Dist: numpy==2.0.1
+Requires-Dist: scipy==1.13.1
+Requires-Dist: xarray==2024.7.0
+Requires-Dist: pandas==2.2.2
+Requires-Dist: datetime==5.5
+Requires-Dist: netcdf4==1.7.2
+Requires-Dist: matplotlib==3.9.2
+Requires-Dist: cartopy==0.23.0
+Requires-Dist: cmocean==4.0.3
+Requires-Dist: pystac==1.10.1
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Requires-Dist: pytest-cov; extra == "test"
+Provides-Extra: all
+Requires-Dist: numpy==2.0.1; extra == "all"
+Requires-Dist: scipy==1.13.1; extra == "all"
+Requires-Dist: xarray==2024.7.0; extra == "all"
+Requires-Dist: pandas==2.2.2; extra == "all"
+Requires-Dist: datetime==5.5; extra == "all"
+Requires-Dist: netcdf4==1.7.2; extra == "all"
+Requires-Dist: matplotlib==3.9.2; extra == "all"
+Requires-Dist: cartopy==0.23.0; extra == "all"
+Requires-Dist: cmocean==4.0.3; extra == "all"
+Requires-Dist: pystac==1.10.1; extra == "all"
+Requires-Dist: pytest; extra == "all"
+Requires-Dist: pytest-cov; extra == "all"
+Dynamic: author
+Dynamic: author-email
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
