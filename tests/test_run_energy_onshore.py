@@ -24,20 +24,21 @@ from energy_onshore.run_energy_onshore import (
     run_hdd,
     run_high_wind_events,
     run_low_wind_events,
+    run_capacity_factor_histogram_opa,
 )
 
 """Tests that correspond to run_energy_onshore.py @froura"""
 
 # define arguments:
-iniyear = "2027"
-inimonth = "11"
-iniday = "14"
+iniyear = "1990"
+inimonth = "01"
+iniday = "01"
 in_path = "test_data/"
 out_path = "."
 hpcprojdir = "test_data/"
-finyear = "2027"
-finmonth = "11"
-finday = "14"
+finyear = "1990"
+finmonth = "01"
+finday = "01"
 
 
 # test get time UTC
@@ -189,3 +190,21 @@ def test_run_low_wind_events(
         )
         is None
     )
+    
+def test_run_capacity_factor_histogram_opa(
+    iniyear=iniyear,
+    inimonth=inimonth,
+    iniday=iniday,
+    finyear=finyear,
+    finmonth=finmonth,
+    finday=finday,
+    in_path=in_path,
+    out_path=out_path,
+):
+    assert (
+        run_capacity_factor_histogram_opa(
+            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
+        )
+        is None
+    )
+

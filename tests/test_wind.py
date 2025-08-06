@@ -9,6 +9,7 @@ from energy_onshore import (
     power_output,
     capacity_factor,
     capacity_factor_histogram_1d,
+    capacity_factor_histogram_opa,
     wind_speed_histogram_1d,
     annual_energy_production_wind,
     high_wind_events,
@@ -81,12 +82,8 @@ def test_capacity_factor(dataarray_u: xr.DataArray):
     assert ((cfS >= 0) & (cfS <= 1)).all(), "Some elements are out of the range [0, 1]"
 
 
-# def test_capacity_factor_histogram(dataarray_u):
-#    u = dataarray_u.sel({"variable": "u"}, drop=True)
-#    u = u.transpose("time", "lat", "lon")    #u=dataarray_u
-#    capacity_factor_histogram(u, 5,iec_class="I")
-#    assert u
-
+def test_capacity_factor_histogram(dataarray_u):
+    pass
 
 def test_capacity_factor_histogram_1d(dataarray_u: xr.DataArray):
     u = dataarray_u.sel({"variable": "u"}, drop=True)
@@ -94,12 +91,6 @@ def test_capacity_factor_histogram_1d(dataarray_u: xr.DataArray):
     assert capacity_factor_histogram_1d(
         u, bins=5, target_lat=1.0, target_lon=1.0, iec_class="I"
     )
-
-
-# def test_wind_speed_histogram(dataarray_u):
-#    u = dataarray_u.sel({"variable": "u"}, drop=True)
-#    u = u.transpose("time", "lat", "lon")    #u=dataarray_u
-#    assert wind_speed_histogram(u, bins=5)
 
 
 def test_wind_speed_histogram_1d(dataarray_u: xr.DataArray):
@@ -134,3 +125,7 @@ def test_low_wind_events(dataarray_u: xr.DataArray):
     u = dataarray_u.sel({"variable": "u"}, drop=True)
     total = low_wind_events(u, 10)['lwe'].sum()
     assert total >= 0
+    
+def test_capacity_factor_histogram_opa(): 
+    cf = xr.open_dataset('test_data/1990_01_01_T00_00_cf_I.nc') #idataarray_u.sel({"variable": "u"}, drop=True)
+    capacity_factor_histogram_opa(cf, working_dir="test_data/")

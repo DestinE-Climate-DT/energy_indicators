@@ -9,6 +9,8 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
+from one_pass.opa import Opa
+
 
 # Load libraries
 from .core import get_type, select_region, wind_speed, select_point
@@ -485,7 +487,7 @@ def capacity_factor(ws, iec_class):
 
     return cf.to_dataset()
 
-
+# warning: deprecated. cf histograms are computed via the OPA implementation under capacity_factor_histogram_opa()
 def capacity_factor_histogram(ws, bins, iec_class):
     """
     Compute the capacity factor histogram of a wind turbine over a 2D grid.
@@ -925,7 +927,6 @@ def wind_speed_histogram_1d(ws, bins, target_lon, target_lat):
 
     return counts, bin_edges
 
-
 def annual_energy_production_wind(capacity_factor, rated_power, num_turbines=1):
     """
     Compute the annual energy production of a wind turbine from its capacity factor time series.
@@ -1060,3 +1061,41 @@ def low_wind_events(ws, threshold=3.0):
     )
 
     return lwe.to_dataset()
+
+def capacity_factor_histogram_opa(cf,working_dir):
+    """
+    Compute the capacity factor histogram for a given grid.
+
+    Input
+    -------
+    cf: xarray.DataArray ; (time,lat,lon)
+        Wind speed magnitude at hub height.
+    working_dir: string
+        Directory where opa works and where the output is dumped.
+    Output
+    -------
+    one_pass pickle file (if statistic is on the making) or netcdf (if statistic is completed).
+
+    References
+    -------
+    [1]: https://earth.bsc.es/gitlab/digital-twins/de_340-2/one_pass/
+    """
+    oparequest = {
+        "stat" : "histogram",
+        "stat_freq": "weekly",
+        "output_freq": "weekly",
+        "time_step": 60,
+        "variable": "cf",
+        "save": True,
+        "bins": 13,
+        "checkpoint": True,
+        "checkpoint_filepath": f'{working_dir}',
+        "save_filepath": f'{working_dir}',
+    }
+    # Get data from gsv
+    data = cf
+
+    # Run One Pass algorithm on a specific stat & variable controlled by the oparequest
+    opa_stat = Opa(oparequest)
+    opa_stat.compute(data)
+

@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.1.2 (24/07/2025)
+
+### Added
+- Added general metadata to the histograms.
+
+### Changed
+- CI/CD fixed.
+
+## v1.1.1 (02/07/2025)
+
+### Added
+- opa added to compute cf histograms.
+
+### Changed
+- Now application depends on Python >= 3.10 instead of >= 3.9. 
+
 ## v1.1.0 (02/06/2025)
 
 ### Added
@@ -10,6 +26,7 @@
 
 ### Changed
 - Adapted README accordingly.
+- now uses Python >=3.10
 
 ## v1.0.0 (18/03/2025)
 

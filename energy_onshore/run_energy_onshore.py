@@ -23,6 +23,7 @@ from energy_onshore.wind import (
     capacity_factor,
     high_wind_events,
     low_wind_events,
+    capacity_factor_histogram_opa,
 )
 # get time UTC
 
@@ -929,3 +930,92 @@ def run_low_wind_events(
 
     lwe.to_netcdf(path=output_file_path, mode="w")
     print("Low wind events have been produced and saved to: ", output_file_path)
+
+def run_capacity_factor_histogram_opa(
+    iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
+):
+    """
+
+    Parameters
+    ----------
+    iniyear : string
+        initial year of the streamed data YYYY.
+    inimonth : string
+        initial month of the streamed data MM.
+    iniday : string
+        initial day of the streamed data DD.
+    finyear : string
+        final year of the streamed data YYYY.
+    finmonth : string
+        final month of the streamed data MM.
+    finday : string
+        final day of the streamed data DD.
+    in_path : string
+        root path where to get the data from.
+    out_path : string
+        path where the output data goes to.
+
+    Returns
+    -------
+    None.
+
+    """
+
+    # Provide the data file name for all variables
+
+    cf_file = (
+        f"{iniyear}_{inimonth}_{iniday}_T00_00_cf_I.nc"
+    )
+
+    absolute_path_cf = os.path.join(in_path, cf_file)
+
+    data_cf = xr.open_dataset(absolute_path_cf)
+
+    cf = data_cf["cf"]
+    
+    # Global attrs:
+    cf.attrs = data_cf.attrs.copy()
+
+    capacity_factor_histogram_opa(cf,in_path)
+
+    # time
+#    time = get_time_utc()
+
+    # version
+ #   version = get_application_version()
+    
+  #  message = (
+   #     time + " ENERGY: capacity factor computed using the "
+    #    f"energy_indicators application v{version}."
+    #)
+
+    #history = data_cf.attrs["history"] + data_cf.attrs["history"] + message
+
+    # Import processing script.
+    
+    #cf = data_cf["cf"][:, 0, :, :]
+
+    # Global attrs:
+    #cf.attrs = {"resolution": data_cf.attrs["resolution"],
+    #        "generation": data_cf.attrs["generation"],
+    #        "activity": data_cf.attrs["activity"],
+    #        "dataset": data_cf.attrs["dataset"],
+    #        "stream": data_cf.attrs["stream"],
+    #        "model": data_cf.attrs["model"],
+    #        "experiment": data_cf.attrs["experiment"],
+    #        "levtype": data_cf.attrs["levtype"],
+    #        "expver": data_cf.attrs["expver"],
+    #        "class": data_cf.attrs["class"],
+    #        "type": data_cf.attrs["type"],
+    #        "realization": data_cf.attrs["realization"]
+    #        }
+
+    #cf.attrs["history"] = history
+
+    #date = pd.to_datetime(cf['time'].values[0])
+    #YYYY_MM_DD = date.strftime('%Y_%m_%d')
+
+    #output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_lwe.nc")
+
+    #lwe.to_netcdf(path=output_file_path, mode="w")
+    #print("Low wind events have been produced and saved to: ", output_file_path)
