@@ -9,6 +9,7 @@ from shapely.geometry import box
 import pystac
 import xarray as xr
 
+
 def extract_datetime_from_filename(filename):
     """Extract datetime from a NetCDF filename."""
     try:
@@ -140,4 +141,3 @@ if __name__ == "__main__":
     # Create STAC Collection
     collection_path = os.path.join(metadata_dir, "collection.json")
     create_stac_collection(collection_path, spatial_extent, temporal_extent)
-

@@ -1,17 +1,21 @@
-# Energy Onshore
+# Energy Indicators (formerly Energy Onshore)
 
-![latest_release](https://earth.bsc.es/gitlab/digital-twins/de_340/energy_onshore/-/badges/release.svg)
+![latest_release](https://earth.bsc.es/gitlab/digital-twins/de_340-2/energy_onshore/-/badges/release.svg)
 
-This repository contains the scripts related to the Energy Onshore use case (WP10 phase1, A10 phase2) of the Climate Adaptation Digital Twin (Climate DT). All the work is being developed in the frame of the Destination Earth initiative.
+This repository contains the scripts related to the Energy Indicators application, part of the Energy use case of the Climate Change Adaptation Digital Twin (Climate DT). All the work is being developed in the frame of the [Destination Earth initiative](https://destination-earth.eu/) from the European Commission, where [ECMWF](https://destine.ecmwf.int/) is one of the Entrusted Entities.
+
+LICENSE NOTE: the European Union, represented by the European Commission is the direct and sole owner of the intellectual property rights of these Results. 
 
 ## Description
 
-The Energy Onshore application is currently being developed as a Python package, with two core scripts, `wind.py`, containing a comprehensive set of wind energy indicators and `solar.py`, containing a limited set of solar energy indicators, supporting scripts containing auxiliary functions for data pre- and post-processing, `core.py`, and a wrapper script to envelope the whole structure, `run_energy_onshore.py`. The final version will be accessed through an interactive Jupyter Notebook, an API or through another type of interface not yet determined.
+The Energy Indicators application is currently being developed as a Python package, with two core scripts, `wind.py`, containing a comprehensive set of wind energy indicators and `solar.py`, containing a limited set of solar energy indicators, supporting scripts containing auxiliary functions for data pre- and post-processing, `core.py`, and a wrapper script to envelope the whole structure, `run_energy_onshore.py`.
 
 ## Implemented indicators
 
 ### Wind energy indicators:
 
+- **Wind Direction** \
+    Wind direction from u and v components.
 - **Wind Speed Anomalies** \
     Wind anomalies compared to a 30-year baseline reference period.
 - **Wind Power Density (WPD)** \
@@ -23,21 +27,39 @@ The Energy Onshore application is currently being developed as a Python package,
 - **Capacity Factor Histogram (1D)** \
     Histogram of capacity factors at a given location.
 - **Wind Speed Histogram** \
-    Histogram of wind speed over a 2D grid.
+    Histogram of wind speed over a 2D grid. Deprecated function, now produced by the one-pass layer.
 - **Wind Speed Histogram (1D)** \
-    Histogram of wind speed at a given location.
+    Histogram of wind speed at a given location. Deprecated function, now produced by the one-pass layer.
 - **Annual Energy Production (AEP)** \
     Energy produced by a wind turbine / wind farm over a year.
 - **High Wind Events** \
     Number of times wind speed exceeds a given threshold.
 - **Low Wind Events** \
     Number of times wind speed is below a given threshold.
+- **Calm Days** \
+    Number of days with wind speed below a given threshold.
+- **Windy Days** \
+    Number of days with wind speed above a given threshold.
 - **Cooling Degree Days (CDD)** \
     Weather-based index designed to describe the energy requirements of buildings in terms of cooling.
 - **Heating Degree Days (HDD)** \
     Weather-based index designed to describe the energy requirements of buildings in terms of heating.
 
+
 <Details>
+
+- **Wind direction**: `wind_direction(u, v, mask=None)` \
+Compute wind direction from u and v components.
+    - Input:
+        - `u: xarray.DataArray ; (time,lat,lon)` -> U-component of wind.
+        - `v: xarray.DataArray ; (time,lat,lon)` -> V-component of wind.
+        - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
+
+    - Output:
+        - `wd: xarray.DataArray ; (time,lat,lon)` -> Wind direction in degrees.
+
+    - References \
+        [1]: 
 
 - **Wind speed anomalies**: `wind_speed_anomalies(ws, climatology, scale='daily')` \
 Compute the wind speed anomalies.
@@ -52,11 +74,12 @@ Compute the wind speed anomalies.
     - References \
         [1]: 
 
-- **Wind power density**: `wind_power_density(ws, air_density=1.225)` \
+- **Wind power density**: `wind_power_density(ws, air_density=1.225, mask=None)` \
 Compute the wind power density.
     - Input:
         - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude.
         - `air_density: float` -> Air density. Default value is 1.225 kg m^(-3).
+        - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
 
     - Output:
         - `wpd: xarray.DataArray ; (time,lat,lon)` -> Wind power density.
@@ -64,11 +87,12 @@ Compute the wind power density.
     - References \
         [1]: 
 
-- **Capacity factor**: `capacity_factor(ws, iec_class)` \
+- **Capacity factor**: `capacity_factor(ws, iec_class, mask=None)` \
 Compute the capacity factor of a wind turbine.
     - Input:
         - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
         - `iec_class: str` -> IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
+        - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
 
     - Output:
         - `cf: xarray.DataArray ; (time,lat,lon)` -> Capacity factor.
@@ -84,8 +108,8 @@ Compute the capacity factor histogram of a wind turbine over a 2D grid.
         - `iec_class: str` -> IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
     
     - Output:
-        - `counts: xarray.DataArray ; (bins,lat,lon)` -> Number of counts in each bin.
-        - `bin_edges: xarray.DataArray ; (bins+1,lat,lon)` -> Bin edges.
+        - `counts: xarray.DataArray ; (lat,lon)` -> Number of counts in each bin.
+        - `bin_edges: xarray.DataArray ; (lat,lon)` -> Bin edges.
 
     - References \
         [1]: https://doi.org/10.1016/j.renene.2019.04.135
@@ -113,8 +137,8 @@ Compute the wind speed histogram over a 2D grid.
         - `bins: int` -> Number of bins.
     
     - Output:
-        - `counts: xarray.DataArray ; (bins,lat,lon)` -> Number of counts in each bin.
-        - `bin_edges: xarray.DataArray ; (bins+1,lat,lon)` -> Bin edges.
+        - `counts: xarray.DataArray ; (lat,lon)` -> Number of counts in each bin.
+        - `bin_edges: xarray.DataArray ; (lat,lon)` -> Bin edges.
 
     - References \
         [1]: https://numpy.org/doc/stable/reference/generated/numpy.apply_along_axis.html \
@@ -148,23 +172,31 @@ Compute the annual energy production of a wind turbine from its capacity factor 
     - References \
         [1]: https://doi.org/10.1016/j.renene.2019.04.135
 
-- **High wind events**: `high_wind_events(ws, threshold=25.0)` \
+- **High wind events**: `high_wind_events(ws, threshold=25.0, mask=None)` \
 Compute where and when wind speed exceeds a given threshold (cut-out speed).
     - Input:
         - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
         - `threshold: float` -> Wind speed threshold (default: 25.0 m/s). Cut-out speed of the wind turbine.
+        - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
 
     - Output:
         - `hwe: xarray.DataArray ; (lat,lon)` -> Number of high wind events.
 
-- **Low wind events**: `low_wind_events(ws, threshold=3.0)` \
+    - References \
+        [1]: https://iopscience.iop.org/article/10.1088/1748-9326/acbdb2
+
+- **Low wind events**: `low_wind_events(ws, threshold=3.0, mask=None)` \
 Compute where and when wind speed is below a given threshold (cut-in speed).
     - Input:
         - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
         - `threshold: float` -> Wind speed threshold (default: 3.0 m/s). Cut-in speed of the wind turbine.
+        - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
 
     - Output:
         - `lwe: xarray.DataArray ; (lat,lon)` -> Number of low wind events.
+
+    - References \
+        [1]: https://iopscience.iop.org/article/10.1088/1748-9326/acbdb2
 
 - **Cooling degree days**: `cooling_degree_days(tm, tx, tn, base=22.0)` \
 Compute the average cooling degree days. Requires daily mean, maximum and minimum temperature.
@@ -195,6 +227,32 @@ Compute the average heating degree days. Requires daily mean, maximum and minimu
 
     - References \
         [1]: https://doi.org/10.1002/joc.3959
+
+- **Calm days**: `calm_days(ws, threshold=2.0, mask=None)` \
+Compute where and when daily average wind speed is below a given threshold (calm days).
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Daily wind speed magnitude.
+        - `threshold: float` -> Wind speed threshold (default: 2.0 m/s).
+        - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
+
+    - Output:
+        - `calm: xarray.DataArray ; (lat,lon)` -> Number of calm days.
+
+    - References \
+        [1]: https://xclim.readthedocs.io/en/stable/indices.html#xclim.indices.calm_days
+
+- **Windy days**: `windy_days(ws, threshold=10.8, mask=None)` \
+Compute where and when daily average wind speed is above a given threshold (windy days).
+    - Input:
+        - `ws: xarray.DataArray ; (time,lat,lon)` -> Daily wind speed magnitude.
+        - `threshold: float` -> Wind speed threshold (default: 10.8 m/s).
+        - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
+
+    - Output:
+        - `windy: xarray.DataArray ; (lat,lon)` -> Number of windy days.
+
+    - References \
+        [1]: https://xclim.readthedocs.io/en/stable/indices.html#xclim.indices.windy_days
 
 </Details>
 
@@ -249,8 +307,8 @@ path_to_data = 'path/to/data/'
 data = xr.open_dataset(path_to_data + 'data.nc')
 data.close()
 
-u100 = data['100u']
-v100 = data['100v']
+u100 = data['u']
+v100 = data['v']
 
 # Compute wind speed
 ws = wind_speed(u100, v100)
@@ -298,15 +356,6 @@ Compute wind speed magnitude from u and v components.
     
     - Output:
         - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude.
-
-- `wind_direction(u, v)`
-Compute wind direction from u and v components.
-    - Input:
-        - `u: xarray.DataArray ; (time,lat,lon)` -> U-component of wind.
-        - `v: xarray.DataArray ; (time,lat,lon)` -> V-component of wind.
-    
-    - Output:
-        - `wd: xarray.DataArray ; (time,lat,lon)` -> Wind direction.
 
 - `cosine_sza_hourly(start_date, end_date, lats, lons)`
 Computes the cosine of the Solar Zenith Angle (SZA).
@@ -408,11 +457,7 @@ Next versions will include a visualization module to plot the results of the dif
 
 ## Dependencies
 
-- `xarray`
-- `numpy`
-- `scipy`
-- `pandas`
-- `datetime`
+See `setup.py`.
 
 ## Support
 
@@ -486,3 +531,39 @@ pytest .
 pytest --pdb
 ```
 
+## How to crete the stac catalog from the output:
+
+### Non-DestinE catalog:
+
+1. create a `data` directory, where you store your output.
+
+```
+mkdir data
+```
+
+2. run the `generate_stac_catalog.py` sctipt (one dir above `data`).
+
+```
+python3 generate_stac_catalog.py
+```
+
+### How to access the documentation:
+
+You can either build and serve the documentation locally:
+
+```
+pip install -e ".[docs]" && sphinx-build docs/source/ docs/build/ && firefox docs/build/index.html
+```
+
+or look at the github pages (may have some delay).
+
+https://destine-climate-dt.github.io/energy_indicators/
+
+### Catalog to be transferred to the Eumetsat Datalake:
+
+Follow these instructions https://destine-data-lake-docs.data.destination-earth.eu/en/latest/dedl-discovery-and-data-access/User-Generated-Data/Promote-user-data-to-become-DestinE-data/Promote-user-data-to-become-DestinE-data.html#step-4-data-preparation
+
+### License
+
+Copyright 2022-2025 European Union (represented by the European Commission)
+The Energy Indicators package is distributed as open-source software under Apache 2.0 License. The copyright owner is the European Union, represented by the European Commission. The development of the Energy Indicators package has been funded by the European Union through Contract DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT). Further info can be found at https://destine.ecmwf.int/ and https://destination-earth.eu/

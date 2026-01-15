@@ -1,23 +1,20 @@
 """
-This module contains core functionalities for the onshore energy project.
+# Destination Earth: Energy Indicators application
+# Authors: Aleksander Lacma-Nadolnik, Francesc Roura-Adserias, Sushovan Ghosh
+# Version: 1.1.x
 
-It includes functions and classes that handle data processing, analysis,
+This module contains core functionalities for the Energy Indicators package.
+
+It includes functions that handle data processing, analysis,
 and other core tasks necessary for the project.
 """
 
-# Destination Earth: Energy Onshore application
-# Author: Aleks Lacima
-# Version: 0.5.0 + dev
-
-import multiprocessing
-
-# Load libraries
+# External libraries
 import xarray as xr
 import numpy as np
 import pandas as pd
 
 # GSV data post-processing and basic analysis.
-
 
 def check_temperature(data):
     """
@@ -88,6 +85,74 @@ def convert_temperature(t, unit="C"):
 
     return t_conv
 
+#def check_radiation(data):
+#    """
+#    Check if radiation is in J/m2 or W/m2.
+#
+#    Input
+#    -------
+#    data: xarray.Dataset / xarray.DataArray
+#        Radiation data.
+#
+#    Output
+#    -------
+#    unit: str
+#        Radiation unit of the data.
+#        Possible values are 'J/m2' and 'W/m2'.
+#    """
+#    # Check if the input parameters satisfy the required conditions.
+#    assert get_type(data) in [
+#        "Dataset",
+#        "DataArray",
+#    ], 'The input variable "data" is not an xarray.Dataset / xarray.DataArray.'
+#
+#    # Check if radiation is in J/m2 or W/m2.
+#    try:
+#        raw_unit = data.attrs["units"].strip()
+#        if raw_unit in ["J/m2", "J m**-2"]:
+#            unit = "J/m2"
+#        elif raw_unit in ["W/m2", "W m**-2"]:
+#            unit = "W/m2"
+#        else:
+#            raise ValueError("The radiation unit is not valid.")
+#    except AttributeError:
+#        raise AttributeError('The data object does not have the attribute "units".')
+#
+#    return unit
+#
+
+#def convert_radiation(rsds):
+#    """
+#    Convert radiation from J/m2 to W/m2 by dividing by 3600 seconds.
+#
+#    Input
+#    -------
+#    rsds: xarray.DataArray ; (time,lat,lon)
+#        Radiation (in J/m2 or W/m2).
+#
+#    Output
+#    -------
+#    r_conv: xarray.DataArray ; (time,lat,lon)
+#        Radiation (in W/m2).
+#    """
+#    # Check if the input parameters satisfy the required conditions.
+#    assert (
+#        get_type(rsds) == "DataArray"
+#    ), 'The input variable "rsds" is not an xarray.DataArray.'
+#
+#    # Convert only if the unit is J/m2 or J m**-2.
+#    try:
+#        raw_unit = rsds.attrs["units"].strip()
+#        if raw_unit in ["J/m2", "J m**-2"]:
+#            r_conv = rsds / 3600
+#            r_conv.attrs["units"] = "W/m2"
+#        else:
+#            r_conv = rsds
+#    except AttributeError:
+#        raise AttributeError('The data object does not have the attribute "units".')
+#
+#    return r_conv
+#
 
 def wind_speed(u, v):
     """
@@ -126,48 +191,6 @@ def wind_speed(u, v):
     )
 
     return ws
-
-
-def wind_direction(u, v):
-    """
-    Compute wind direction from u and v components.
-
-    Input
-    -------
-    u: xarray.DataArray ; (time,lat,lon)
-        U-component of wind.
-    v: xarray.DataArray ; (time,lat,lon)
-        V-component of wind.
-
-    Output
-    -------
-    wd: xarray.DataArray ; (time,lat,lon)
-        Wind direction.
-    """
-    # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(u) == "DataArray"
-    ), 'The input variable "u" is not an xarray.DataArray.'
-    assert (
-        get_type(v) == "DataArray"
-    ), 'The input variable "v" is not an xarray.DataArray.'
-
-    # Compute wind direction.
-    wd = np.arctan2(u, v)
-
-    # Convert wind direction from radians to degrees.
-    wd = np.degrees(wd)
-
-    # Add metadata to the output variable.
-    attrs = {"shortname": "wd", "longname": "Wind direction", "units": "degrees"}
-    coords = {"time": u.time, "lat": u.lat, "lon": u.lon}
-    dims = ("time", "lat", "lon")
-
-    wd = xr.DataArray(
-        wd, dims=dims, coords=coords, attrs=attrs, name=attrs["shortname"]
-    )
-
-    return wd
 
 
 def cosine_sza_hourly(start_date, end_date, lats, lons):
@@ -283,7 +306,6 @@ def cosine_sza_hourly(start_date, end_date, lats, lons):
 
 # Statistical analysis.
 
-
 def percentile(var, wanted_percentile, axis=0):
     """
     Compute percentile of a variable along a given axis (i.e. dimension).
@@ -347,56 +369,7 @@ def moving_average(data, window_size):
     return avg[window_size - 1 :] / window_size
 
 
-def spatial_multiprocessing(function, var, *args):
-    """
-    Parallelise a calculation over a 2D grid. The calculation is performed in parallel for each \
-    grid cell.
-
-    Input
-    -------
-    function: function
-        Function to be parallelised.
-    var: xarray.DataArray ; (lat,lon)
-        Variable.
-    *args: tuple
-        Arguments of the function to be parallelised.
-
-    Output
-    -------
-    res: xarray.DataArray ; (lat,lon)
-        Output of the parallelised function.
-    """
-
-    # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(function) == "function"
-    ), 'The input variable "function" is not a function.'
-    assert (
-        get_type(var) == "DataArray"
-    ), 'The input variable "var" is not an xarray.DataArray.'
-    assert get_type(args) == "tuple", 'The input variable "*args" is not a tuple.'
-
-    # Create a list of all (i, j) positions
-    jobargs = [
-        (i, j, var, args) for i in range(var.shape[0]) for j in range(var.shape[1])
-    ]
-
-    # Create a pool with the number of desired processes
-    num_processes = (
-        multiprocessing.cpu_count()
-    )  # Adjust this value based on your system capabilities
-    with multiprocessing.Pool(num_processes) as pool:
-        out = list(pool.starmap(function, jobargs))
-    pool.close()
-    pool.join()
-
-    res = np.array(out).reshape(var.shape[0], var.shape[1])
-
-    return res
-
-
 # Data restructuring and resampling.
-
 
 def temporal_rescaling(var, scale="None"):
     """
@@ -513,7 +486,6 @@ def select_point(data, target_lon, target_lat):
 
 
 # Other support functions.
-
 
 def create_dataset(variables, attrs, coords, dims):
     """

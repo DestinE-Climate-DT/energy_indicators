@@ -1,5 +1,157 @@
 # Changelog
 
+# v2.0.2 (24/11/2025)
+
+### Changed
+
+- Releasing v2.0.2 to follow ClimateDT release guidelines. No changes in code from v2.0.1.1.
+
+# v2.0.1, v2.0.1.1 (X/11/2025)
+
+### Changed
+
+- Minor bugfixes.
+
+# v2.0.0 (5/11/2025)
+
+### Added
+- Mask for the histogram calculation was added. This is a temporal solution.
+
+# v1.2.0 (31/10/2025)
+
+### Changed
+- Modified power curve interpolation method to Pchip interpolator (previously Weibull CDF).
+- Fixed bug in wind_direction function.
+- Removed wind_direction from core.py and added it to wind.py
+- Removed unused spatial_multiprocessing function from core.py
+- Removed hdd_acc and cdd_acc from demand.py and run_energy_onshore.py
+- Updated README.md
+- Minor changes to several core scripts.
+- opa dependency to 0.8.2 --> 0.9.0
+- fixed mask variable metadata
+
+
+### Added
+- Added run_wind_direction function to run_energy_onshore.py
+- Added calm_days and windy_days indicators to wind.py
+- Added tests for calm_days and windy_days indicators.
+- Added tests for run_wind_direction function.
+- linting step in Makefile
+
+# v1.1.6 (16/10/2025)
+
+### Fixed
+- minor spelling in metadata.
+
+### Added
+- utils.py to outsource the turbine specifications.
+
+### Changed
+- cf to run montly histograms.
+- pv_pot to be computed from daily means.
+
+# v1.1.5 (29/09/2025)
+
+### Fixed
+- pytest for run_pv_potenital function.
+
+# v1.1.4 (15/09/2025)
+
+### Added
+- pv_pot function as well as functions related to radiation in core.py.
+- tests for them.
+
+
+# v1.1.3 (03/09/2025)
+
+### Added
+- Docs creation in the Makefile.
+- Util file for cf power curve analysis.
+- land-sea mask pytest.
+- land-sea mask applied to cf calculation and to the other indicators.
+
+### Changed
+- Added docs creation in the cicd.
+- Deleted big files.
+
+## v1.1.2 (24/07/2025)
+
+### Added
+- Added general metadata to the histograms.
+
+### Changed
+- CI/CD fixed.
+
+## v1.1.1 (02/07/2025)
+
+### Added
+- opa added to compute cf histograms.
+
+### Changed
+- Now application depends on Python >= 3.10 instead of >= 3.9. 
+
+
+## v1.1.0 (02/06/2025)
+
+### Added
+- Utils directory containing auxiliary scripts for plotting or indicator analysis.
+- Liscence statement in the README before going open-source.
+- Improved Docs.
+- Added comments to the indicator creation.
+
+### Changed
+- Adapted README accordingly.
+- now uses Python >=3.10
+
+## v1.0.0 (18/03/2025)
+
+### Highlights:
+
+Version used in the e-suite in first half of 2025.
+
+### changed:
+- pytests fixes.
+- metadata is kept in all the variables.
+- demand script is now defined outside the wind script.
+
+### :warning
+- application output names has been changed to match the standard from A10 guidelines `YYYY_MM_DD_T00_00_indicator name.nc`.
+
+## v0.7.9 (10/03/2025 )
+### Changed
+
+### Added:
+- Added pystac dependency for stac catalog creation for the data lake.
+
+## v0.7.8 (24/02/2025)
+### Changed
+
+### Added:
+- global attributes added to the CFs
+
+# v0.7.7 (019/02/2025)
+### Changed
+
+### Added
+- Documantation page
+
+### Changed
+- change 100v and 100u by u and v . 
+
+# v0.7.6 (03/01/2025)
+### Minor (new features):
+- Major performance improvement in the capacity factor calculation.
+
+### Patches:
+- Fix test linked to the modification above.
+
+# v0.7.5 (19/12/2024)
+## Major (major changes): 
+
+## Minor (new features):
+
+## Patches:
+- Add power curves to the pip installation.
 
 ## v0.7.4
 # Major (major changes): 

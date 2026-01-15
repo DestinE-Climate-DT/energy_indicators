@@ -1,0 +1,161 @@
+{
+  "id": "EO.BSC.DAT.ENERGY_INDICATORS",
+  "type": "Collection",
+  "stac_version": "1.0.0",
+  "title": "Energy Indicators from the Climate Adaptation Digital Twin",
+  "description": "The Energy Indicators dataset from the Climate Adaptation Digital Twin is designed to allow the provision of energy-relevant indicators to adapt to climate change. It provides standard indicators for the wind energy sector (capacity factors for different wind turbines, weekly wind histograms, low wind and high wind events), as well as indicators for energy demand (heating and cooling degree-days). For these simultations we provide them for the north sea, at 5km resolution. The indicators have been created from houly data.",
+  "dedl:short_description": "Energy indicators from the Climate Adaptation Digital Twin, including production and demand indicators.",
+  "license": "Apache-2.0",
+  "extent": {
+        "spatial": {
+            "bbox": [
+                [
+                  -5.0,
+                  50.05,
+                  5.0,
+                  59.95
+                ]
+            ]
+        },
+        "temporal": {
+            "interval": [
+                [
+                 "1990-01-01T00:00:00Z", 
+                 "2001-01-01T00:00:00Z"
+                ]
+            ]
+        }
+  },
+  "links": [
+        {
+            "rel": "describedby",
+            "href": "https://destination-earth.eu/use-cases/some_place_relevant/",
+            "type": "text/html",
+            "title": "Energy Indicators from the Climate Adaptation Digital Twin"
+        }
+      ],
+  "assets": {
+      "thumbnail": {
+            "href": "https://destination-earth.eu/wp-content/uploads/2023/10/hydromet_fig1-1771x547-1.png",
+            "type": "image/png",
+            "roles": [
+                "thumbnail"
+            ],
+            "title": "overview"
+        }
+    },
+  "cube:dimensions": {
+    "lat": {
+      "axis": "y",
+      "type": "spatial",
+      "extent": [50.05, 59.95],
+      "description": "latitude"
+    },
+    "lon": {
+      "axis": "x",
+      "type": "spatial",
+      "extent": [-5, 5],
+      "description": "longitude"
+    },
+    "time": {
+      "type": "temporal",
+      "step": "P0Y0M0DT1H0M0S",
+      "extent": ["2000-01-01T00:00:00Z", "2000-02-29T00:00:00Z"]
+    },
+    "bin_edges": {
+      "type": "other",
+      "description": "Edges of the histogram bins representing wind speed thresholds"
+    },
+    "bin_counts": {
+      "type": "other",
+      "description": "Indices representing histogram bin counts for wind speed distribution"
+    },
+    "level": {
+      "type": "vertical",
+      "extent": [0],
+      "unit": "-",
+      "description": "Vertical level or height above surface"
+    }
+  },
+  "summaries": {
+    "parameters": [
+      {
+        "name": "Capacity factor for turbine type I",
+        "short_name": "cf_I",
+        "unit": null,
+        "dimensions": ["lat", "lon", "time"],
+        "description": "The capacity factor for turbine I is the ratio of actual output over a period of time to the maximum possible output over the same period, expressed from 0 to 1."
+      },
+      {
+        "name": "Capacity factor for turbine type II",
+        "short_name": "cf_II",
+        "unit": null,
+        "dimensions": ["lat", "lon", "time"],
+        "description": "The capacity factor for turbine II is the ratio of actual output over a period of time to the maximum possible output over the same period, expressed from 0 to 1."
+      },
+      {
+        "name": "Capacity factor for turbine type III",
+        "short_name": "cf_III",
+        "unit": null,
+        "dimensions": ["lat", "lon", "time"],
+        "description": "The capacity factor for turbine III is the ratio of actual output over a period of time to the maximum possible output over the same period, expressed from 0 to 1."
+      },
+      {
+        "name": "Capacity factor for turbine type S",
+        "short_name": "cf_S",
+        "unit": null,
+        "dimensions": ["lat", "lon", "time"],
+        "description": "The capacity factor for turbine S is the ratio of actual output over a period of time to the maximum possible output over the same period, expressed from 0 to 1."
+      },
+      {
+        "name": "Cooling Degree-Days",
+        "short_name": "cdd",
+        "unit": null,
+        "dimensions": ["lat", "lon", "time"],
+        "description": "Cooling Degree-Days represent the cumulative degrees by which the daily mean temperature exceeds a reference temperature, indicating demand for cooling."
+      },
+      {
+        "name": "Heating Degree-Days",
+        "short_name": "hdd",
+        "unit": null,
+        "dimensions": ["lat", "lon", "time"],
+        "description": "Heating Degree-Days represent the cumulative degrees by which the daily mean temperature falls below a reference temperature, indicating demand for heating."
+      },
+      {
+        "name": "Low Wind Events",
+        "short_name": "lwe",
+        "unit": null,
+        "dimensions": ["lat", "lon", "time"],
+        "description": "Low Wind Events indicate periods where wind speeds fall below a defined threshold, impacting wind energy production and local weather conditions."
+      },
+      {
+        "name": "High Wind Events",
+        "short_name": "hwe",
+        "unit": null,
+        "dimensions": ["lat", "lon", "time"],
+        "description": "High Wind Events indicate periods where wind speeds exceed a defined threshold, which can influence weather hazards and energy generation."
+      },
+      {
+      "name": "Weekly Wind Speed Histogram counts",
+      "short_name": "histogram_bin_counts",
+      "unit": null,
+      "dimensions": ["time", "bin_count", "level", "lat", "lon"],
+      "description": "Histogram bin conunts representing the distribution of wind speeds over specified bins, showing the frequency of occurrence. Should be taken together with Weekly Wind Speed Histogram bin edges."
+      },
+      {
+      "name": "Weekly Wind Speed Histogram bin edges",
+      "short_name": "histogram_bin_edges",
+      "unit": null,
+      "dimensions": ["time", "bin_edges", "level", "lat", "lon"],
+      "description": "Histogram bin edges representing the edges of the bins of a windspeed histogram over a week. Should be taken together with Weekly Wind Speed Histogram counts."
+      }
+    ]
+  },
+  "sci:publications": [
+    {
+      "doi": "https://doi.org/10.5281/zenodo.15609171",
+      "citation": "Lacima-Nadolnik, A., Roura-Adserias, F., Grayson, K. M., & Ghosh, S. (2025). DestinE-Climate-DT/energy_indicators: v1.1.0 (v1.1.0). Zenodo. https://doi.org/10.5281/zenodo.15609172"
+    }
+  ]
+}
+

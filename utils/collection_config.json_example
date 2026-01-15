@@ -1,0 +1,14 @@
+{
+    "id": "EO.BSC.DAT.ENERGY_INDICATORS",
+    "item_asset_ignore_list": ["item_config.json"],
+    "item_folder_level": "DD",
+    "thumbnail_regex": "^thumbnail",
+    "overview_regex": "^overview",
+    "additional_property_keys": [
+        "model",
+        "experiment",
+        "generation",
+        "simulation_id"
+    ]
+}
+

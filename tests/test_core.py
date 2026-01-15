@@ -6,11 +6,9 @@ from energy_onshore.core import (
     check_temperature,
     convert_temperature,
     wind_speed,
-    wind_direction,
     cosine_sza_hourly,
     percentile,
     moving_average,
-    spatial_multiprocessing,
     temporal_rescaling,
     select_region,
     temporal_rescaling,
@@ -46,14 +44,6 @@ def test_wind_speed(dataarray_u, dataarray_v):
     assert type(wind_speed(u, v)) == xr.DataArray
 
 
-def test_wind_direction(dataarray_u, dataarray_v):
-    u = dataarray_u.sel({"variable": "u"}, drop=True)
-    v = dataarray_v.sel({"variable": "v"}, drop=True)
-    u = u.transpose("time", "lat", "lon")
-    v = v.transpose("time", "lat", "lon")
-    assert type(wind_direction(u, v)) == xr.DataArray
-
-
 def test_cosine_sza_hourly(dataarray_u, dataarray_v):
     start_date = np.datetime64(1, "D")
     end_date = np.datetime64(10, "D")
@@ -73,11 +63,6 @@ def test_moving_average(
     dataarray_t_c, val=1
 ):  # TODO: add a warning when val=> than the lenght of the data
     assert moving_average(dataarray_t_c.data, 1).all()
-
-
-def test_spatial_multiprocessing():
-    # TODO: think of a test for that.
-    pass
 
 
 def test_temporal_rescaling(dataarray_t_c, scale="daily"):
@@ -112,3 +97,4 @@ def test_check_dims(dataarray_t_c):
         check_dims(dataarray_t_c)
     t_c = dataarray_t_c.sel({"variable": "t_c"}, drop=True)
     assert check_dims(t_c) == None
+

@@ -20,6 +20,11 @@ def create_template_arrays():
         zonal component of windspeed.
     v : numpy array
         meridional component of windspeed.
+    ten_si : numpy array
+        surface wind speed by combining u and v
+    avg_sdswrf: numpy array
+        surface shortwave downward radiation
+
     attributes : dict
         attribute metadata that is added by default in this test array.
     coordinates : dict
@@ -53,17 +58,27 @@ def create_template_arrays():
 
     v = {"v": v}
 
+    # --- New arrays built from the existing template ---
+    # 10si (10 m wind speed) = sqrt(u^2 + v^2)
+    ten_si = {"10si": np.sqrt(u["u"] ** 2 + v["v"] ** 2)}
+
+    # avg_sdswrf (surface downwelling shortwave radiation, W/m^2)
+    avg_sdswrf = {
+        "avg_sdswrf": np.random.uniform(0, 1000, u["u"].shape)  # typical range
+    }
+
+
     coordinates = {"time": times, "lat": latitudes, "lon": longitudes}
 
-    dimensions = ( "time", "lat", "lon")
+    dimensions = ("time", "lat", "lon")
 
     attributes = {
         "units": "depending on de variab",
     }
-    return t_c, t_k, u, v, attributes, coordinates, dimensions
+    return t_c, t_k, u, v, ten_si, avg_sdswrf, attributes, coordinates, dimensions
 
 
-t_c, t_k, u, v, attributes, coordinates, dimensions = create_template_arrays()
+t_c, t_k, u, v, ten_si, avg_sdswrf, attributes, coordinates, dimensions = create_template_arrays()
 
 
 @pytest.fixture
@@ -84,7 +99,7 @@ def dataarray_t_c():
 @pytest.fixture
 def dataarray_t_k():
     """
-    Creates a dataarray filled with random temperature values in Kelvin.    
+    Creates a dataarray filled with random temperature values in Kelvin.
 
     Returns
     -------
@@ -114,7 +129,7 @@ def dataarray_u():
 @pytest.fixture
 def dataarray_v():
     """
-    Creates a dataarray filled with random meridional wind values in ms⁻¹.    
+    Creates a dataarray filled with random meridional wind values in ms⁻¹.
 
     Returns
     -------
@@ -123,4 +138,17 @@ def dataarray_v():
 
     """
     test_dataset = create_dataset(v, {"units": "ms-1"}, coordinates, dimensions)
+    return test_dataset.to_array()
+
+
+@pytest.fixture
+def dataarray_10si():
+    """Creates a dataarray for 10 m wind speed (10si) in m/s."""
+    test_dataset = create_dataset(ten_si, {"units": "ms-1"}, coordinates, dimensions)
+    return test_dataset.to_array()
+
+@pytest.fixture
+def dataarray_avg_sdswrf():
+    """Creates a dataarray for shortwave radiation (avg_sdswrf) in W/m^2."""
+    test_dataset = create_dataset(avg_sdswrf, {"units": "W/m2"}, coordinates, dimensions)
     return test_dataset.to_array()

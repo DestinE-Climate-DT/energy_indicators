@@ -9,6 +9,7 @@ def read(filename):
     filepath = os.path.join(os.path.dirname(__file__), filename)
     return io.open(filepath, encoding="utf-8").read()
 
+
 install_requires = [
     "numpy==2.0.1",
     "scipy==1.13.1",
@@ -19,6 +20,8 @@ install_requires = [
     "matplotlib==3.9.2",
     "cartopy==0.23.0",
     "cmocean==4.0.3",
+    "pystac==1.10.1",
+    "one-pass @ git+https://earth.bsc.es/gitlab/digital-twins/de_340-2/one_pass.git@v0.9.0#egg=one-pass"
 ]
 
 test_requires = ["pytest", "pytest-cov"]
@@ -33,8 +36,12 @@ setup(
     author="Aleksander Lacima, Francesc Roura-Adserias",
     author_email="aleksander.lacima@bsc.es, francesc.roura@bsc.es",
     url="https://earth.bsc.es/gitlab/digital-twins/de_340-2/energy_onshore",
-    python_requires=">=3.9",
+    python_requires=">3.9",
     packages=find_packages(),
+    package_data={
+        "energy_onshore": ["power_curves"],
+    },
+    include_package_data=True,
     install_requires=install_requires,
     extras_require=extras_require,
 )
