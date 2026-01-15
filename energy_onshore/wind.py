@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """
-# Destination Earth: Energy Indicators application
+# Destination Earth: Energy Onshore application
+# Author: Aleks Lacima
+# Version: 0.5.0
 """
-
 # External imports
-import os
 import xarray as xr
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
-from one_pass.opa import Opa
-
+from scipy.spatial import KDTree
 
 # Load libraries
 from .core import get_type, select_region, wind_speed, select_point
@@ -43,7 +42,7 @@ def wind_speed_anomalies(ws, climatology, scale="daily"):
     -------
     [1]: https://doi.org/10.1175/JCLI3366.1
     """
-    #    from .core import select_region
+#    from .core import select_region
 
     # Check if the input parameters satisfy the required conditions.
     assert (
@@ -196,7 +195,7 @@ def wind_speed_at_height(u10, v10, hub_height, alpha=0.143):
     [1]: https://doi.org/10.1080/00022470.1977.10470503
     [2]: https://doi.org/10.1175/1520-0450(1994)033<0757:DTPLWP>2.0.CO;2
     """
-    # from .core import wind_speed
+    #from .core import wind_speed
 
     # Check if the input parameters satisfy the required conditions.
     assert (
@@ -213,7 +212,7 @@ def wind_speed_at_height(u10, v10, hub_height, alpha=0.143):
     for var in [u10, v10]:
         assert (
             var.ndim == 3
-        ), f"The input variable {var.name} does not have the required dimensions (time,lat,lon)."
+        ), f'The input variable {var.name} does not have the required dimensions (time,lat,lon).'
 
     # Compute the wind speed at the given height.
     ws = wind_speed(u10, v10)
@@ -235,18 +234,16 @@ def wind_speed_at_height(u10, v10, hub_height, alpha=0.143):
     return wshh
 
 
-def power_output(ws, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_speed):
+def power_curve(iec_class, rated_power, cut_in_speed, rated_speed, cut_out_speed):
     """
-    Compute the estimated power output of a wind turbine.
+    Compute the power curve of a wind turbine.
 
     Input
     -------
-    ws: numpy.ndarray ; (time * lat * lon)
-        Wind speed magnitude at hub height (flattened array).
     iec_class: str
         IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
     rated_power: int
-        Rated power of the wind turbine in kW.
+        Rated power of the wind turbine in MW.
     cut_in_speed: float
         Cut-in speed of the wind turbine in m s^(-1).
     rated_speed: float
@@ -256,8 +253,8 @@ def power_output(ws, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_
 
     Output
     -------
-    power_out: xarray.DataArray ; (time * lat * lon)
-        Power output in kW (flattened array).
+    pc: xarray.DataArray ; (ws)
+        Power curve.
 
     References
     -------
@@ -271,14 +268,13 @@ def power_output(ws, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_
     [8]: https://www.thewindpower.net/turbine_es_1476_vestas_v164-9500.php
     [9]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html
     """
-    # from scipy.optimize import curve_fit
+    #from scipy.optimize import curve_fit
 
     # Check if the input parameters satisfy the required conditions.
     if not isinstance(rated_power, (float, int)):
         raise TypeError(
             'The input variable "rated_power" must be a float or an integer.'
         )
-    assert get_type(ws) == "ndarray", 'The input variable "ws" is not a numpy.ndarray.'
     assert (
         get_type(cut_in_speed) == "float"
     ), 'The input variable "cut_in_speed" is not a float.'
@@ -307,10 +303,9 @@ def power_output(ws, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_
     ]
 
     # Read the csv file with the manufacturer power curve.
-    turbine_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "power_curves", f"{turbines[t]}.csv"
+    power_curve_data = pd.read_csv(
+        f"energy_onshore/power_curves/{turbines[t]}.csv", skiprows=1, sep=","
     )
-    power_curve_data = pd.read_csv(turbine_path, skiprows=1, sep=",")
 
     # Define a parametrized Weibull Cumulative Distribution Function to fit the power curve.
     def weibull_distribution(x, alfa, k):
@@ -326,34 +321,30 @@ def power_output(ws, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_
     # Extract the optimized parameters
     alfa_opt, k_opt = popt
 
-    # Evaluate power output at given wind speeds using the piecewise definition.
+    x = np.linspace(0, 30, 10000)
+
     conditions = [
-        (ws < cut_in_speed),
-        (ws >= cut_in_speed) & (ws <= rated_speed),
-        (ws > rated_speed) & (ws <= cut_out_speed),
-        (ws > cut_out_speed),
+        (x < cut_in_speed),
+        (x >= cut_in_speed) & (x <= rated_speed),
+        (x > rated_speed) & (x <= cut_out_speed),
+        (x > cut_out_speed),
     ]
 
-    functions = [
-        0,
-        lambda x: weibull_distribution(x, alfa_opt, k_opt),
-        rated_power,
-        0,
-    ]
+    functions = [0, lambda x: weibull_distribution(x, alfa_opt, k_opt), rated_power, 0]
 
     # A piecewise function is used to obtain the power curve.
-    power_out = np.piecewise(ws, conditions, functions)
+    pc = np.piecewise(x, conditions, functions)
 
     # Store the power curve and the wind values in an xarray.DataArray.
-    attrs = {"shortname": "po", "longname": "Power output", "units": "kW"}
-    coords = {"wind_speed": ws}
+    attrs = {"shortname": "pc", "longname": "Power curve", "units": "kW"}
+    coords = {"wind_speed": x}
     dims = "wind_speed"
 
-    power_out = xr.DataArray(
-        power_out, coords=coords, dims=dims, attrs=attrs, name=attrs["shortname"]
+    pc = xr.DataArray(
+        pc, coords=coords, dims=dims, attrs=attrs, name=attrs["shortname"]
     )
 
-    return power_out
+    return pc
 
 
 def capacity_factor(ws, iec_class):
@@ -379,7 +370,7 @@ def capacity_factor(ws, iec_class):
             scipy.spatial.KDTree.html#scipy.spatial.KDTree
 
     """
-    # from scipy.spatial import KDTree
+    #from scipy.spatial import KDTree
 
     # Check if the input parameters satisfy the required conditions.
     assert (
@@ -399,7 +390,7 @@ def capacity_factor(ws, iec_class):
     class_i = {
         "turbine_model": "Enercon E70",
         "rotor_diameter": 71,
-        "rated_power": 2300,
+        "rated_power": 2.3,
         "hub_height": 85,
         "cut_in_speed": 2.0,
         "rated_speed": 15.5,
@@ -408,7 +399,7 @@ def capacity_factor(ws, iec_class):
     class_i_ii = {
         "turbine_model": "Gamesa G80",
         "rotor_diameter": 80,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 80,
         "cut_in_speed": 3.5,
         "rated_speed": 15.0,
@@ -417,7 +408,7 @@ def capacity_factor(ws, iec_class):
     class_ii = {
         "turbine_model": "Gamesa G87",
         "rotor_diameter": 87,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 83.5,
         "cut_in_speed": 3.0,
         "rated_speed": 14.0,
@@ -426,7 +417,7 @@ def capacity_factor(ws, iec_class):
     class_ii_iii = {
         "turbine_model": "Vestas V100",
         "rotor_diameter": 100,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 100,
         "cut_in_speed": 3.5,
         "rated_speed": 12.0,
@@ -435,7 +426,7 @@ def capacity_factor(ws, iec_class):
     class_iii = {
         "turbine_model": "Vestas V110",
         "rotor_diameter": 110,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 100,
         "cut_in_speed": 4.0,
         "rated_speed": 12.0,
@@ -444,7 +435,7 @@ def capacity_factor(ws, iec_class):
     class_s = {
         "turbine_model": "Vestas V164",
         "rotor_diameter": 164,
-        "rated_power": 9500,
+        "rated_power": 9.5,
         "hub_height": 105,
         "cut_in_speed": 3.5,
         "rated_speed": 14.0,
@@ -457,24 +448,32 @@ def capacity_factor(ws, iec_class):
     t = iec_to_t.get(iec_class, -1)
 
     # Compute the power curve of the wind turbine.
-    rated_power = turbine_class[t]["rated_power"]
+    rated_power = turbine_class[t]["rated_power"] * 10**3  # Convert to Watts.
     cut_in_speed = turbine_class[t]["cut_in_speed"]
     rated_speed = turbine_class[t]["rated_speed"]
     cut_out_speed = turbine_class[t]["cut_out_speed"]
 
-    # Flatten the wind array
-    ws_flatten = np.array(ws).flatten()
+    pc = power_curve(iec_class, rated_power, cut_in_speed, rated_speed, cut_out_speed)
 
-    # Obtain the power output
-    power_out_flatten = power_output(
-        ws_flatten, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_speed
-    )
+    # Reshape power curve wind values to make them suitable for cKDTree.
+    ws_arr = np.array(ws)
+    pc_wind = pc["wind_speed"].values
+    pc_wind_reshaped = pc_wind.reshape(-1, 1)
 
-    # Reshape power output to match original wind speed input array.
-    power_out = np.reshape(np.array(power_out_flatten), ws.shape)
+    # Create a cKDTree object
+    tree = KDTree(pc_wind_reshaped)
+
+    # Use the tree to find the index of the closest power output for each wind speed.
+    _, indices = tree.query(ws_arr.reshape(-1, 1), workers=-1)
+
+    # Use the indices to get the corresponding power outputs.
+    power_output = np.array(pc[indices])
+
+    # Reshape the result to have the same shape as the original ws array.
+    power_output = power_output.reshape(ws.shape)
 
     # Compute the capacity factor.
-    cf = power_out / rated_power
+    cf = power_output / rated_power
 
     # Add metadata to the output variable.
     attrs = {"shortname": "cf", "longname": "Capacity factor", "units": "-"}
@@ -485,9 +484,9 @@ def capacity_factor(ws, iec_class):
         cf, coords=coords, dims=dims, attrs=attrs, name=attrs["shortname"]
     )
 
-    return cf.to_dataset()
+    return cf
 
-# warning: deprecated. cf histograms are computed via the OPA implementation under capacity_factor_histogram_opa()
+
 def capacity_factor_histogram(ws, bins, iec_class):
     """
     Compute the capacity factor histogram of a wind turbine over a 2D grid.
@@ -515,7 +514,7 @@ def capacity_factor_histogram(ws, bins, iec_class):
     [2]: https://numpy.org/doc/stable/reference/generated/numpy.apply_along_axis.html
     [3]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
     """
-    # from scipy.spatial import KDTree
+    #from scipy.spatial import KDTree
 
     # Check if the input parameters satisfy the required conditions.
     assert (
@@ -535,7 +534,7 @@ def capacity_factor_histogram(ws, bins, iec_class):
     class_i = {
         "turbine_model": "Enercon E70",
         "rotor_diameter": 71,
-        "rated_power": 2300,
+        "rated_power": 2.3,
         "hub_height": 85,
         "cut_in_speed": 2.0,
         "rated_speed": 15.5,
@@ -544,7 +543,7 @@ def capacity_factor_histogram(ws, bins, iec_class):
     class_i_ii = {
         "turbine_model": "Gamesa G80",
         "rotor_diameter": 80,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 80,
         "cut_in_speed": 3.5,
         "rated_speed": 15.0,
@@ -553,7 +552,7 @@ def capacity_factor_histogram(ws, bins, iec_class):
     class_ii = {
         "turbine_model": "Gamesa G87",
         "rotor_diameter": 87,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 83.5,
         "cut_in_speed": 3.0,
         "rated_speed": 14.0,
@@ -562,7 +561,7 @@ def capacity_factor_histogram(ws, bins, iec_class):
     class_ii_iii = {
         "turbine_model": "Vestas V100",
         "rotor_diameter": 100,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 100,
         "cut_in_speed": 3.5,
         "rated_speed": 12.0,
@@ -571,7 +570,7 @@ def capacity_factor_histogram(ws, bins, iec_class):
     class_iii = {
         "turbine_model": "Vestas V110",
         "rotor_diameter": 110,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 100,
         "cut_in_speed": 4.0,
         "rated_speed": 12.0,
@@ -580,7 +579,7 @@ def capacity_factor_histogram(ws, bins, iec_class):
     class_s = {
         "turbine_model": "Vestas V164",
         "rotor_diameter": 164,
-        "rated_power": 9500,
+        "rated_power": 9.5,
         "hub_height": 105,
         "cut_in_speed": 3.5,
         "rated_speed": 14.0,
@@ -593,24 +592,32 @@ def capacity_factor_histogram(ws, bins, iec_class):
     t = iec_to_t.get(iec_class, -1)
 
     # Compute the power curve of the wind turbine.
-    rated_power = turbine_class[t]["rated_power"]
+    rated_power = turbine_class[t]["rated_power"] * 10**3  # Convert to Watts.
     cut_in_speed = turbine_class[t]["cut_in_speed"]
     rated_speed = turbine_class[t]["rated_speed"]
     cut_out_speed = turbine_class[t]["cut_out_speed"]
 
-    # Flatten the wind array
-    ws_flatten = np.array(ws).flatten()
+    pc = power_curve(iec_class, rated_power, cut_in_speed, rated_speed, cut_out_speed)
 
-    # Obtain the power output
-    power_out_flatten = power_output(
-        ws_flatten, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_speed
-    )
+    # Reshape power curve wind values to make them suitable for cKDTree.
+    ws_arr = np.array(ws)
+    pc_wind = pc["wind_speed"].values
+    pc_wind_reshaped = pc_wind.reshape(-1, 1)
 
-    # Reshape power output to match original wind speed input array.
-    power_out = np.reshape(np.array(power_out_flatten), ws.shape)
+    # Create a cKDTree object
+    tree = KDTree(pc_wind_reshaped)
+
+    # Use the tree to find the index of the closest power output for each wind speed.
+    _, indices = tree.query(ws_arr.reshape(-1, 1))
+
+    # Use the indices to get the corresponding power outputs.
+    power_output = np.array(pc[indices])
+
+    # Reshape the result to have the same shape as the original ws array.
+    power_output = power_output.reshape(ws.shape)
 
     # Compute the capacity factor.
-    cf = power_out / rated_power
+    cf = power_output / rated_power
 
     # Compute the capacity factor histogram.
     def compute_histogram(x):
@@ -669,8 +676,8 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
             generated/scipy.spatial.KDTree.html#scipy.spatial.KDTree
     [2]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
     """
-    #    from .core import select_point
-    #    from scipy.spatial import KDTree
+#    from .core import select_point
+#    from scipy.spatial import KDTree
 
     # Check if the input parameters satisfy the required conditions.
     assert (
@@ -696,7 +703,7 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
     class_i = {
         "turbine_model": "Enercon E70",
         "rotor_diameter": 71,
-        "rated_power": 2300,
+        "rated_power": 2.3,
         "hub_height": 85,
         "cut_in_speed": 2.0,
         "rated_speed": 15.5,
@@ -705,7 +712,7 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
     class_i_ii = {
         "turbine_model": "Gamesa G80",
         "rotor_diameter": 80,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 80,
         "cut_in_speed": 3.5,
         "rated_speed": 15.0,
@@ -714,7 +721,7 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
     class_ii = {
         "turbine_model": "Gamesa G87",
         "rotor_diameter": 87,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 83.5,
         "cut_in_speed": 3.0,
         "rated_speed": 14.0,
@@ -723,7 +730,7 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
     class_ii_iii = {
         "turbine_model": "Vestas V100",
         "rotor_diameter": 100,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 100,
         "cut_in_speed": 3.5,
         "rated_speed": 12.0,
@@ -732,7 +739,7 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
     class_iii = {
         "turbine_model": "Vestas V110",
         "rotor_diameter": 110,
-        "rated_power": 2000,
+        "rated_power": 2.0,
         "hub_height": 100,
         "cut_in_speed": 4.0,
         "rated_speed": 12.0,
@@ -741,7 +748,7 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
     class_s = {
         "turbine_model": "Vestas V164",
         "rotor_diameter": 164,
-        "rated_power": 9500,
+        "rated_power": 9.5,
         "hub_height": 105,
         "cut_in_speed": 3.5,
         "rated_speed": 14.0,
@@ -754,24 +761,32 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
     t = iec_to_t.get(iec_class, -1)
 
     # Compute the power curve of the wind turbine.
-    rated_power = turbine_class[t]["rated_power"]
+    rated_power = turbine_class[t]["rated_power"] * 10**3  # Convert to Watts.
     cut_in_speed = turbine_class[t]["cut_in_speed"]
     rated_speed = turbine_class[t]["rated_speed"]
     cut_out_speed = turbine_class[t]["cut_out_speed"]
 
-    # Flatten the wind array
-    ws_flatten = np.array(ws).flatten()
+    pc = power_curve(iec_class, rated_power, cut_in_speed, rated_speed, cut_out_speed)
 
-    # Obtain the power output
-    power_out_flatten = power_output(
-        ws_flatten, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_speed
-    )
+    # Select the wind speed values at the target location.
+    ws_target = select_point(ws, target_lon, target_lat)
 
-    # Reshape power output to match original wind speed input array.
-    power_out = np.reshape(np.array(power_out_flatten), ws.shape)
+    # Reshape power curve wind values to make them suitable for cKDTree.
+    ws_arr = np.array(ws_target)
+    pc_wind = pc["wind_speed"].values
+    pc_wind_reshaped = pc_wind.reshape(-1, 1)
+
+    # Create a cKDTree object
+    tree = KDTree(pc_wind_reshaped)
+
+    # Use the tree to find the index of the closest power output for each wind speed.
+    _, indices = tree.query(ws_arr.reshape(-1, 1))
+
+    # Use the indices to get the corresponding power outputs.
+    power_output = np.array(pc[indices])
 
     # Compute the capacity factor.
-    cf = power_out / rated_power
+    cf = power_output / rated_power
 
     # Compute the capacity factor histogram.
     counts, bin_edges = np.histogram(cf, bins=bins)
@@ -883,7 +898,7 @@ def wind_speed_histogram_1d(ws, bins, target_lon, target_lat):
     -------
     [1]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
     """
-    #    from .core import select_point
+#    from .core import select_point
 
     # Check if the input parameters satisfy the required conditions.
     assert (
@@ -926,6 +941,7 @@ def wind_speed_histogram_1d(ws, bins, target_lon, target_lat):
     )
 
     return counts, bin_edges
+
 
 def annual_energy_production_wind(capacity_factor, rated_power, num_turbines=1):
     """
@@ -1018,7 +1034,7 @@ def high_wind_events(ws, threshold=25.0):
         hwe, coords=coords, dims=dims, attrs=attrs, name=attrs["shortname"]
     )
 
-    return hwe.to_dataset()
+    return hwe
 
 
 def low_wind_events(ws, threshold=3.0):
@@ -1060,42 +1076,181 @@ def low_wind_events(ws, threshold=3.0):
         lwe, coords=coords, dims=dims, attrs=attrs, name=attrs["shortname"]
     )
 
-    return lwe.to_dataset()
+    return lwe
 
-def capacity_factor_histogram_opa(cf,working_dir):
+
+def cooling_degree_days(tm, tx, tn, base=22.0):
     """
-    Compute the capacity factor histogram for a given grid.
+    Compute the average cooling degree days. Requires daily mean, maximum and minimum temperature.
+    Base temperature can be adjusted according to the region/country considered.
 
     Input
     -------
-    cf: xarray.DataArray ; (time,lat,lon)
-        Wind speed magnitude at hub height.
-    working_dir: string
-        Directory where opa works and where the output is dumped.
+    tm: xarray.DataArray ; (time,lat,lon)
+        Mean temperature in °C.
+    tx: xarray.DataArray ; (time,lat,lon)
+        Maximum temperature in °C.
+    tn: xarray.DataArray ; (time,lat,lon)
+        Minimum temperature in °C.
+    base: float
+        Base temperature (default: 22°C). Depends on the region/country considered.
+
     Output
     -------
-    one_pass pickle file (if statistic is on the making) or netcdf (if statistic is completed).
+    cdd: xarray.DataArray ; (time,lat,lon)
+        Cooling degree days.
+    cdd_acc: xarray.DataArray ; (lat,lon)
+        Total accumulated cooling degree days.
 
     References
     -------
-    [1]: https://earth.bsc.es/gitlab/digital-twins/de_340-2/one_pass/
+    [1]: https://doi.org/10.1002/joc.3959
     """
-    oparequest = {
-        "stat" : "histogram",
-        "stat_freq": "weekly",
-        "output_freq": "weekly",
-        "time_step": 60,
-        "variable": "cf",
-        "save": True,
-        "bins": 13,
-        "checkpoint": True,
-        "checkpoint_filepath": f'{working_dir}',
-        "save_filepath": f'{working_dir}',
-    }
-    # Get data from gsv
-    data = cf
+    # Check if the input parameters satisfy the required conditions.
+    assert (
+        get_type(tm) == "DataArray"
+    ), 'The input variable "tm" is not an xarray.DataArray.'
+    assert (
+        get_type(tx) == "DataArray"
+    ), 'The input variable "tx" is not an xarray.DataArray.'
+    assert (
+        get_type(tn) == "DataArray"
+    ), 'The input variable "tn" is not an xarray.DataArray.'
+    if not isinstance(base, (float, int)):
+        raise TypeError('The input variable "base" must be a float or an integer.')
+    # Check the dimensions of the input variables.
+    for var in [tm, tx, tn]:
+        assert (
+            var.ndim == 3
+        ), f'The input variable {var.name} does not have the required dimensions (time,lat,lon).'
 
-    # Run One Pass algorithm on a specific stat & variable controlled by the oparequest
-    opa_stat = Opa(oparequest)
-    opa_stat.compute(data)
+    # Initialize the cooling degree days array.
+    cdd = np.zeros_like(tm)
+
+    # Vectorized implementation of the cooling degree days computation.
+    mask1 = base >= tx
+    mask2 = np.logical_and(tm <= base, base < tx)
+    mask3 = np.logical_and(tn <= base, base < tm)
+    mask4 = base < tn
+
+    cdd += np.where(mask1, 0, 0)
+    cdd += np.where(mask2, (tx - base) / 4, 0)
+    cdd += np.where(mask3, (tx - base) / 2 - (base - tn) / 4, 0)
+    cdd += np.where(mask4, tm - base, 0)
+
+    # Compute the accumulated cooling degree days for the period of interest.
+    cdd_acc = np.sum(cdd, axis=0)
+
+    # Add metadata to the output variable.
+    attrs = {"shortname": "cdd", "longname": "Cooling degree days", "units": "°C"}
+    attrs_acc = {
+        "shortname": "cdd_acc",
+        "longname": "Total accumulated cooling degree days",
+        "units": "°C",
+    }
+    coords = {"time": tm.time, "lat": tm.lat, "lon": tm.lon}
+    coords_acc = {"lat": tm.lat, "lon": tm.lon}
+    dims = ("time", "lat", "lon")
+    dims_acc = ("lat", "lon")
+
+    cdd = xr.DataArray(
+        cdd, coords=coords, dims=dims, attrs=attrs, name=attrs["shortname"]
+    )
+    cdd_acc = xr.DataArray(
+        cdd_acc,
+        coords=coords_acc,
+        dims=dims_acc,
+        attrs=attrs_acc,
+        name=attrs_acc["shortname"],
+    )
+
+    return cdd, cdd_acc
+
+
+def heating_degree_days(tm, tx, tn, base=15.5):
+    """
+    Compute the average heating degree days. Requires daily mean, maximum and minimum temperature.
+    Base temperature can be adjusted according to the region/country considered.
+
+    Input
+    -------
+    tm: xarray.DataArray ; (time,lat,lon)
+        Mean temperature in °C.
+    tx: xarray.DataArray ; (time,lat,lon)
+        Maximum temperature in °C.
+    tn: xarray.DataArray ; (time,lat,lon)
+        Minimum temperature in °C.
+    base: float
+        Threshold temperature (default: 15.5°C). Depends on the region/country considered.
+
+    Output
+    -------
+    hdd: xarray.DataArray ; (time,lat,lon)
+        Heating degree days.
+    hdd_acc: xarray.DataArray ; (lat,lon)
+        Total accumulated heating degree days.
+
+    References
+    -------
+    [1]: https://doi.org/10.1002/joc.3959
+    """
+    # Check if the input parameters satisfy the required conditions.
+    assert (
+        get_type(tm) == "DataArray"
+    ), 'The input variable "tm" is not an xarray.DataArray.'
+    assert (
+        get_type(tx) == "DataArray"
+    ), 'The input variable "tx" is not an xarray.DataArray.'
+    assert (
+        get_type(tn) == "DataArray"
+    ), 'The input variable "tn" is not an xarray.DataArray.'
+    if not isinstance(base, (float, int)):
+        raise TypeError('The input variable "base" must be a float or an integer.')
+    # Check the dimensions of the input variables.
+    for var in [tm, tx, tn]:
+        assert (
+            var.ndim == 3
+        ), f'The input variable {var.name} does not have the required dimensions (time,lat,lon).'
+
+    # Initialize the heating degree days array.
+    hdd = np.zeros_like(tm)
+
+    # Vectorized implementation of the heating degree days computation.
+    mask1 = base >= tx
+    mask2 = np.logical_and(tm <= base, base < tx)
+    mask3 = np.logical_and(tn <= base, base < tm)
+    mask4 = base < tn
+
+    hdd += np.where(mask1, base - tm, 0)
+    hdd += np.where(mask2, (base - tn) / 2 - (tx - base) / 4, 0)
+    hdd += np.where(mask3, (base - tn) / 4, 0)
+    hdd += np.where(mask4, 0, 0)
+
+    # Compute the total heating degree days for the period of interest.
+    hdd_acc = np.sum(hdd, axis=0)
+
+    # Add metadata to the output variable.
+    attrs = {"shortname": "hdd", "longname": "Heating degree days", "units": "°C"}
+    attrs_acc = {
+        "shortname": "hdd_acc",
+        "longname": "Total accumulated heating degree days",
+        "units": "°C",
+    }
+    coords = {"time": tm.time, "lat": tm.lat, "lon": tm.lon}
+    coords_acc = {"lat": tm.lat, "lon": tm.lon}
+    dims = ("time", "lat", "lon")
+    dims_acc = ("lat", "lon")
+
+    hdd = xr.DataArray(
+        hdd, coords=coords, dims=dims, attrs=attrs, name=attrs["shortname"]
+    )
+    hdd_acc = xr.DataArray(
+        hdd_acc,
+        coords=coords_acc,
+        dims=dims_acc,
+        attrs=attrs_acc,
+        name=attrs_acc["shortname"],
+    )
+
+    return hdd, hdd_acc
 

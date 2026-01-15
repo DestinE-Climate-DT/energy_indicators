@@ -46,7 +46,7 @@ def solar_capacity_factor_daily(t2c, rsds):
     for var in [rsds, t2c]:
         assert (
             var.ndim == 3
-        ), f"The input variable {var.name} does not have the required dimensions (time,lat,lon)."
+        ), f'The input variable {var.name} does not have the required dimensions (time,lat,lon).'
 
     # Compute the PV module temperature.
     t_noct = 48.0  # Nominal operating cell temperature (°C)
@@ -130,7 +130,7 @@ def annual_energy_production_daily(capacity_factor, rated_power, num_panels=1):
 
 
 # Pending to be completed.
-# def solar_capacity_factor_hourly(rsds, t, elevation):
+#def solar_capacity_factor_hourly(rsds, t, elevation):
 #    """
 #    Compute the capacity factor of a PV solar panel at hourly scale (taking into account the \
 #            solar elevation angle).
@@ -180,13 +180,13 @@ def annual_energy_production_daily(capacity_factor, rated_power, num_panels=1):
 
 
 # Ideas for future development.
-# def effective_radiation_days(rsds):
+#def effective_radiation_days(rsds):
 #    return None
 
 
-# def cloud_days(clt):
+#def cloud_days(clt):
 #    return None
 
 
-# def clear_sky_days(clt):
+#def clear_sky_days(clt):
 #    return None

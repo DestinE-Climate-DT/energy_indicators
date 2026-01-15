@@ -3,15 +3,14 @@ Script to define the functions to plot the results.
 """
 # Plotting libraries
 
-
 # Matplotlib
 def load_plot_libs():
     """
     Load essential libraries for plotting and geospatial visualizations.
 
-    This function imports several key libraries required for creating and customizing
-    advanced visualizations, including general plotting tools, geospatial visualization
-    utilities, and oceanographic colormaps. These libraries facilitate the creation of
+    This function imports several key libraries required for creating and customizing 
+    advanced visualizations, including general plotting tools, geospatial visualization 
+    utilities, and oceanographic colormaps. These libraries facilitate the creation of 
     maps, handling of colormaps, and manipulation of geospatial data.
 
     Libraries Imported
@@ -35,9 +34,9 @@ def load_plot_libs():
 
     Notes
     -----
-    This function does not return any values but ensures all necessary libraries
-    are imported and ready for use in subsequent visualizations. It is recommended
-    to call this function at the beginning of scripts that involve geospatial
+    This function does not return any values but ensures all necessary libraries 
+    are imported and ready for use in subsequent visualizations. It is recommended 
+    to call this function at the beginning of scripts that involve geospatial 
     or scientific data visualization.
 
     Returns
@@ -61,7 +60,6 @@ def load_plot_libs():
     from cartopy.util import add_cyclic_point
     import cmocean as cmo
 
-
 # Define colormaps
 def define_colormaps():
     """
@@ -71,22 +69,8 @@ def define_colormaps():
     cmap_lwe = cmo.cm.tempo
     cmap_hwe = cmo.cm.amp
 
-
 # Updated plot_map function
-def plot_map(
-    data,
-    xmin,
-    xmax,
-    colormap,
-    label,
-    title,
-    delta=12,
-    projection="robinson",
-    type="pcolormesh",
-    extend="neither",
-    ax=None,
-    output_file=None,
-):
+def plot_map(data, xmin, xmax, colormap, label, title, delta=12, projection='robinson', type='pcolormesh', extend='neither', ax=None, output_file=None):
     """
     Plots a geographical map of a variable using a specified projection, colormap, and plotting style.
 
@@ -137,14 +121,14 @@ def plot_map(
     Examples
     --------
     Example usage with xarray DataArray:
-    >>> plot_map(data=my_data, xmin=0, xmax=100, colormap='viridis', label='Temperature (°C)',
+    >>> plot_map(data=my_data, xmin=0, xmax=100, colormap='viridis', label='Temperature (°C)', 
                  title='Global Temperature Map', type='pcolormesh', output_file='map.png')
 
     """
     proj = ccrs.Robinson()
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(14, 10), subplot_kw={"projection": proj})
+        fig, ax = plt.subplots(figsize=(14, 10), subplot_kw={'projection': proj})
 
     lats = data.lat.values
     lons = data.lon.values
@@ -154,62 +138,33 @@ def plot_map(
 
     lon2d, lat2d = np.meshgrid(lons, lats)
 
-    if type == "pcolormesh":
-        cs = ax.pcolormesh(
-            lon2d,
-            lat2d,
-            var,
-            transform=ccrs.PlateCarree(),
-            cmap=colormap,
-            vmin=xmin,
-            vmax=xmax,
-        )
-    elif type == "contourf":
+    if type == 'pcolormesh':
+        cs = ax.pcolormesh(lon2d, lat2d, var, transform=ccrs.PlateCarree(), cmap=colormap, vmin=xmin, vmax=xmax)
+    elif type == 'contourf':
         clevs = np.linspace(xmin, xmax, 256)
-        cs = ax.contourf(
-            lon2d,
-            lat2d,
-            var,
-            levels=clevs,
-            cmap=colormap,
-            extend=extend,
-            transform=ccrs.PlateCarree(),
-        )
-        ax.contour(
-            lon2d,
-            lat2d,
-            var,
-            clevs,
-            colors="k",
-            linewidths=0.5,
-            transform=ccrs.PlateCarree(),
-        )
+        cs = ax.contourf(lon2d, lat2d, var, levels=clevs, cmap=colormap, extend=extend, transform=ccrs.PlateCarree())
+        ax.contour(lon2d, lat2d, var, clevs, colors='k', linewidths=0.5, transform=ccrs.PlateCarree())
 
-    ax.add_feature(cfeature.LAND, edgecolor="black", facecolor="whitesmoke")
-    ax.add_feature(cfeature.COASTLINE, linewidth=0.75, edgecolor="black")
+    ax.add_feature(cfeature.LAND, edgecolor='black', facecolor='whitesmoke')
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.75, edgecolor='black')
 
-    gl = ax.gridlines(
-        draw_labels=True, linewidth=1, color="gray", alpha=0.5, linestyle="--"
-    )
+    gl = ax.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5, linestyle='--')
     gl.top_labels = False
     gl.right_labels = False
-    gl.xlabel_style = {"size": 12}
-    gl.ylabel_style = {"size": 12}
+    gl.xlabel_style = {'size': 12}
+    gl.ylabel_style = {'size': 12}
 
-    cbar = plt.colorbar(
-        cs, ax=ax, orientation="horizontal", pad=0.05, extend=extend, shrink=0.7
-    )
+    cbar = plt.colorbar(cs, ax=ax, orientation='horizontal', pad=0.05, extend=extend, shrink=0.7)
     cbar.set_label(label)
     cbar.ax.tick_params(labelsize=12)
 
     plt.title(title)
 
     if output_file:
-        plt.savefig(output_file, dpi=300, bbox_inches="tight")
+        plt.savefig(output_file, dpi=300, bbox_inches='tight')
         print(f"Plot saved to {output_file}")
 
     plt.close()
-
 
 # Define the plot_cf function
 def plot_cf(file_paths, output_directory):
@@ -229,27 +184,21 @@ def plot_cf(file_paths, output_directory):
     for category, file_path in file_paths.items():
         try:
             ds = xr.open_dataset(file_path)
-            cf = ds["cf"]
-            daily_mean = cf.resample(time="1D").mean()
-            first_day_date = pd.to_datetime(daily_mean["time"].values[0]).strftime(
-                "%Y-%m-%d"
-            )
-            output_file = os.path.join(
-                output_directory,
-                f"{category.upper().replace('_', '')}_daily_mean_{first_day_date}.png",
-            )
+            cf = ds['cf']
+            daily_mean = cf.resample(time='1D').mean()
+            first_day_date = pd.to_datetime(daily_mean['time'].values[0]).strftime('%Y-%m-%d')
+            output_file = os.path.join(output_directory, f"{category.upper().replace('_', '')}_daily_mean_{first_day_date}.png")
             plot_map(
                 data=daily_mean.isel(time=0),
                 xmin=0,
                 xmax=1,
                 colormap=cmap_cmocean,
-                label="Capacity Factor (%)",
+                label='Capacity Factor (%)',
                 title=f'{category.upper().replace("_", "")} - Daily Mean Capacity Factor ({first_day_date})',
-                output_file=output_file,
+                output_file=output_file
             )
         except Exception as e:
             print(f"Error processing {category}: {e}")
-
 
 # Define the plot_lwe_hwe function
 def plot_lwe_hwe(input_files, output_directory):
@@ -270,20 +219,17 @@ def plot_lwe_hwe(input_files, output_directory):
             ds = xr.open_dataset(file_path)
             event_data = ds[event_type]
             perc_occur = (event_data / 24) * 100
-            first_day_date = file_path.split("/")[-1].split("_")[1].split("T")[0]
-            colormap = cmap_lwe if event_type == "lwe" else cmap_hwe
-            output_file = os.path.join(
-                output_directory,
-                f"{event_type.upper()}_perc_occur_{first_day_date}.png",
-            )
+            first_day_date = file_path.split('/')[-1].split('_')[1].split('T')[0]
+            colormap = cmap_lwe if event_type == 'lwe' else cmap_hwe
+            output_file = os.path.join(output_directory, f"{event_type.upper()}_perc_occur_{first_day_date}.png")
             plot_map(
                 data=perc_occur,
                 xmin=0,
                 xmax=100,
                 colormap=colormap,
-                label=f"{event_type.upper()} Percentage Occurrence (%)",
-                title=f"{event_type.upper()} - Daily Accumulated Percentage Occurrence ({first_day_date})",
-                output_file=output_file,
+                label=f'{event_type.upper()} Percentage Occurrence (%)',
+                title=f'{event_type.upper()} - Daily Accumulated Percentage Occurrence ({first_day_date})',
+                output_file=output_file
             )
         except Exception as e:
             print(f"Error processing {event_type}: {e}")
@@ -317,20 +263,16 @@ def plot_degree_days(input_files, output_directory):
 
         # Extract data and variable
         data = ds[variable]
-        data.attrs["units"] = "°C"  # Ensure the units are consistent for the colorbar
+        data.attrs['units'] = "°C"  # Ensure the units are consistent for the colorbar
 
         # Get data min and adjust data max to the nearest multiple of 5
         data_min = data.min().values
         data_max = data.max().values
-        data_max_adjusted = (
-            int(data_max / 5) + 1
-        ) * 5  # Round up to the nearest multiple of 5
+        data_max_adjusted = (int(data_max / 5) + 1) * 5  # Round up to the nearest multiple of 5
 
         # Extract the date from the file name
         try:
-            date_str = file_path.split("_")[2].split("T")[
-                0
-            ]  # Extract date from file name
+            date_str = file_path.split('_')[2].split('T')[0]  # Extract date from file name
             first_day_date = pd.Timestamp(date_str)
         except Exception as e:
             print(f"Error extracting date from file name for {variable}: {e}")
@@ -343,9 +285,7 @@ def plot_degree_days(input_files, output_directory):
             output_file_name = f"{formatted_variable}_Daily_Accumulated_{first_day_date.strftime('%Y-%m-%d')}.png"
         else:
             title_text = f"{formatted_variable} - Daily Accumulated (Unknown Date)"
-            output_file_name = (
-                f"{formatted_variable}_Daily_Accumulated_Unknown_Date.png"
-            )
+            output_file_name = f"{formatted_variable}_Daily_Accumulated_Unknown_Date.png"
 
         # Define the colormap
         colormap = "rainbow"
@@ -359,11 +299,11 @@ def plot_degree_days(input_files, output_directory):
             xmin=data_min,
             xmax=data_max_adjusted,  # Adjusted max value
             colormap=colormap,
-            label=f"{formatted_variable} Accumulated (°C)",
+            label=f'{formatted_variable} Accumulated (°C)',
             title=title_text,  # Updated title with variable and date
             delta=10,  # Adjust the number of ticks dynamically via delta
-            projection="robinson",
-            type="pcolormesh",
-            extend="max",  # Extend only for max
-            output_file=output_file,
+            projection='robinson',
+            type='pcolormesh',
+            extend='max',  # Extend only for max
+            output_file=output_file
         )

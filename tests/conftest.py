@@ -55,7 +55,7 @@ def create_template_arrays():
 
     coordinates = {"time": times, "lat": latitudes, "lon": longitudes}
 
-    dimensions = ("time", "lat", "lon")
+    dimensions = ( "time", "lat", "lon")
 
     attributes = {
         "units": "depending on de variab",
@@ -84,7 +84,7 @@ def dataarray_t_c():
 @pytest.fixture
 def dataarray_t_k():
     """
-    Creates a dataarray filled with random temperature values in Kelvin.
+    Creates a dataarray filled with random temperature values in Kelvin.    
 
     Returns
     -------
@@ -114,7 +114,7 @@ def dataarray_u():
 @pytest.fixture
 def dataarray_v():
     """
-    Creates a dataarray filled with random meridional wind values in ms⁻¹.
+    Creates a dataarray filled with random meridional wind values in ms⁻¹.    
 
     Returns
     -------

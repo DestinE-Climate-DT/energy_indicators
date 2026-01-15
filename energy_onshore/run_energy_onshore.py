@@ -2,32 +2,25 @@
 """
 Definition of the runs cripts to be run in the workflow runscript
 """
-
 # Load libraries
-import importlib
 import os
 from datetime import datetime, timezone
 
 import numpy as np
 import xarray as xr
-import pandas as pd
 
-from energy_onshore.core import wind_speed, convert_temperature
-from energy_onshore.demand import (
-    heating_degree_days,
-    cooling_degree_days,
-)
+from energy_onshore.core import (wind_speed,convert_temperature)
+from energy_onshore import (wind_speed_anomalies,
+                            capacity_factor,
+                            high_wind_events,
+                            low_wind_events,
+                            heating_degree_days,
+                            cooling_degree_days
+                            )
 
-from energy_onshore.wind import (
-    wind_speed_anomalies,
-    capacity_factor,
-    high_wind_events,
-    low_wind_events,
-    capacity_factor_histogram_opa,
-)
 # get time UTC
 
-def get_time_utc():  # add pytest
+def get_time_utc(): #add pytest
     """
     Parameters
     ----------
@@ -44,24 +37,12 @@ def get_time_utc():  # add pytest
     formatted_time = current_time_utc.strftime("%Y-%m-%d %H:%M:%S")
     return formatted_time
 
-def get_application_version():
-    """
-    Parameters
-    ----------
-    -
-
-    Returns
-    -------
-    package version.
-    """
-    version=importlib.metadata.version('energy_onshore')
-    
-    return version
-
 # Wind speed anomalies
 
 
-def run_wind_speed_anomalies(iniyear, inimonth, iniday, in_path, out_path, hpcprojdir):
+def run_wind_speed_anomalies(
+    iniyear, inimonth, iniday, in_path, out_path, hpcprojdir
+):
     """
     Parameters
     ----------
@@ -87,8 +68,8 @@ def run_wind_speed_anomalies(iniyear, inimonth, iniday, in_path, out_path, hpcpr
     # Provide the data file name for all variables
 
     # adapt this for 1 and several days run:
-    u100_file = f"{iniyear}_{inimonth}_{iniday}_u_timestep_60_daily_mean.nc"
-    v100_file = f"{iniyear}_{inimonth}_{iniday}_v_timestep_60_daily_mean.nc"
+    u100_file = f"{iniyear}_{inimonth}_{iniday}_100u_timestep_60_daily_mean.nc"
+    v100_file = f"{iniyear}_{inimonth}_{iniday}_100v_timestep_60_daily_mean.nc"
 
     absolute_path_u100 = os.path.join(in_path, u100_file)
     absolute_path_v100 = os.path.join(in_path, v100_file)
@@ -97,22 +78,17 @@ def run_wind_speed_anomalies(iniyear, inimonth, iniday, in_path, out_path, hpcpr
     data_v100 = xr.open_dataset(absolute_path_v100)
 
     # time
-    time = get_time_utc()
-    
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + f" ENERGY: wind speed anomalies computed using the" 
-        "energy_onshore application v{version}."
-    )
+    time=get_time_utc()
+
+    message= time + " ENERGY: wind speed anomalies computed using the" \
+    " energy_onshore application."
 
     history = data_u100.attrs["history"] + data_v100.attrs["history"] + message
 
     # Import processing script.
 
-    u100 = data_u100["u"][:, 0, 1:, :-1]
-    v100 = data_v100["v"][:, 0, 1:, :-1]
+    u100 = data_u100["100u"][:, 0, 1:, :-1]
+    v100 = data_v100["100v"][:, 0, 1:, :-1]
 
     num_points = len(u100.coords["lat"])
     new_latitude = np.linspace(27.0, 72.0, num=num_points)
@@ -131,16 +107,12 @@ def run_wind_speed_anomalies(iniyear, inimonth, iniday, in_path, out_path, hpcpr
     clim_100m = clim_10m * (100 / 10) ** (0.143)
 
     ws_anom = wind_speed_anomalies(w_s, clim_100m, scale="daily")
+    output_file_path = os.path.join(out_path, f"ws100_anom_{w_s['time'].values[0]}.nc")
 
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_ws100_anom.nc")
-
-    ws_anom.attrs["history"] = history
+    ws_anom.attrs['history']=history
 
     ws_anom.to_netcdf(path=output_file_path, mode="w")
-    print("Wind speed anomalies have been produced and saved to: ", output_file_path)
+
 
 # Capacity factor (class I)
 
@@ -149,7 +121,7 @@ def run_capacity_factor_i(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
 ):
     """
-
+    
 
     Parameters
     ----------
@@ -178,14 +150,10 @@ def run_capacity_factor_i(
 
     # Provide the data file name for all variables
 
-    u100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_u_raw_data.nc"
-    )
-    v100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_v_raw_data.nc"
-    )
+    u100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+    "T23_00_100u_raw_data.nc"
+    v100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+    "T23_00_100v_raw_data.nc"
 
     absolute_path_u100 = os.path.join(in_path, u100_file)
     absolute_path_v100 = os.path.join(in_path, v100_file)
@@ -194,51 +162,27 @@ def run_capacity_factor_i(
     data_v100 = xr.open_dataset(absolute_path_v100)
 
     # time
-    time = get_time_utc()
+    time=get_time_utc()
 
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + " ENERGY: capacity factor (I type) computed using the"
-        f"energy_onshore application v{version}."
-    )
+    message= time + " ENERGY: capacity factor (I type) computed using the" \
+        " energy_onshore application."
 
     history = data_u100.attrs["history"] + data_v100.attrs["history"] + message
 
     # Import processing script.
 
-    u100 = data_u100["u"][:, 0, :, :]
-    v100 = data_v100["v"][:, 0, :, :]
+    u100 = data_u100["100u"][:, 0, :, :]
+    v100 = data_v100["100v"][:, 0, :, :]
 
     w_s = wind_speed(u100, v100)
 
     c_f = capacity_factor(w_s, iec_class="I")
+    c_f.attrs['history']=history
 
-    # Global attrs:
-    c_f.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"], 
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
-
-    c_f.attrs["history"] = history
-    
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cf_I.nc")
+    output_file_path = os.path.join(out_path, f"cf_I_{w_s['time'].values[0]}.nc")
 
     c_f.to_netcdf(path=output_file_path, mode="w")
-    print("Capacity factor for turbine type 'I' has been produced and saved to: ", output_file_path)
+
 
 
 # Capacity factor (class II)
@@ -248,7 +192,7 @@ def run_capacity_factor_ii(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
 ):
     """
-
+    
 
     Parameters
     ----------
@@ -277,14 +221,10 @@ def run_capacity_factor_ii(
 
     # Provide the data file name for all variables
 
-    u100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_u_raw_data.nc"
-    )
-    v100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_v_raw_data.nc"
-    )
+    u100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+    "T23_00_100u_raw_data.nc"
+    v100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+    "T23_00_100v_raw_data.nc"
 
     absolute_path_u100 = os.path.join(in_path, u100_file)
     absolute_path_v100 = os.path.join(in_path, v100_file)
@@ -293,51 +233,27 @@ def run_capacity_factor_ii(
     data_v100 = xr.open_dataset(absolute_path_v100)
 
     # time
-    time = get_time_utc()
+    time=get_time_utc()
 
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + " ENERGY: capacity factor (II type) computed using the" 
-        f"energy_onshore application v{version}."
-    )
+    message= time + " ENERGY: capacity factor (II type) computed using the "\
+    "energy_onshore application."
 
     history = data_u100.attrs["history"] + data_v100.attrs["history"] + message
     # Import processing script.
 
-    u100 = data_u100["u"][:, 0, :, :]
-    v100 = data_v100["v"][:, 0, :, :]
+    u100 = data_u100["100u"][:, 0, :, :]
+    v100 = data_v100["100v"][:, 0, :, :]
 
     w_s = wind_speed(u100, v100)
 
     c_f = capacity_factor(w_s, iec_class="II")
+    c_f.attrs['history']=history
 
-    # Global attrs:
-    c_f.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
-
-
-    c_f.attrs["history"] = history
-
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cf_II.nc")
+    output_file_path = os.path.join(out_path, f"cf_II_{w_s['time'].values[0]}.nc")
 
     c_f.to_netcdf(path=output_file_path, mode="w")
-    print("Capacity factor for turbine type 'II' has been produced and saved to: ", output_file_path)
+
+
 
 
 # Capacity factor (class III)
@@ -347,7 +263,7 @@ def run_capacity_factor_iii(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
 ):
     """
-
+    
 
     Parameters
     ----------
@@ -376,14 +292,10 @@ def run_capacity_factor_iii(
 
     # Provide the data file name for all variables
 
-    u100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_u_raw_data.nc"
-    )
-    v100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_v_raw_data.nc"
-    )
+    u100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+    "T23_00_100u_raw_data.nc"
+    v100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+    "T23_00_100v_raw_data.nc"
 
     absolute_path_u100 = os.path.join(in_path, u100_file)
     absolute_path_v100 = os.path.join(in_path, v100_file)
@@ -392,50 +304,27 @@ def run_capacity_factor_iii(
     data_v100 = xr.open_dataset(absolute_path_v100)
 
     # time
-    time = get_time_utc()
+    time=get_time_utc()
 
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + " ENERGY: capacity factor (III type) computed using the"
-        f"energy_onshore application v{version}."
-    )
+    message= time + " ENERGY: capacity factor (III type) computed using the "\
+    "energy_onshore application."
 
     history = data_u100.attrs["history"] + data_v100.attrs["history"] + message
     # Import processing script.
 
-    u100 = data_u100["u"][:, 0, :, :]
-    v100 = data_v100["v"][:, 0, :, :]
+    u100 = data_u100["100u"][:, 0, :, :]
+    v100 = data_v100["100v"][:, 0, :, :]
 
     w_s = wind_speed(u100, v100)
 
     c_f = capacity_factor(w_s, iec_class="III")
+    c_f.attrs['history']=history
 
-    # Global attrs:
-    c_f.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
-
-    c_f.attrs["history"] = history
-
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cf_III.nc")
+    output_file_path = os.path.join(out_path, f"cf_III_{w_s['time'].values[0]}.nc")
 
     c_f.to_netcdf(path=output_file_path, mode="w")
-    print("Capacity factor for turbine type 'III' has been produced and saved to: ", output_file_path)
+
+
 
 
 # Capacity factor (class S)
@@ -445,7 +334,7 @@ def run_capacity_factor_s(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
 ):
     """
-
+    
 
     Parameters
     ----------
@@ -472,16 +361,13 @@ def run_capacity_factor_s(
 
     """
 
+
     # Provide the data file name for all variables
 
-    u100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_u_raw_data.nc"
-    )
-    v100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_v_raw_data.nc"
-    )
+    u100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+    "T23_00_100u_raw_data.nc"
+    v100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+    "T23_00_100v_raw_data.nc"
 
     absolute_path_u100 = os.path.join(in_path, u100_file)
     absolute_path_v100 = os.path.join(in_path, v100_file)
@@ -490,51 +376,28 @@ def run_capacity_factor_s(
     data_v100 = xr.open_dataset(absolute_path_v100)
 
     # time
-    time = get_time_utc()
+    time=get_time_utc()
 
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + " ENERGY: capacity factor (S type) computed using the"
-        f" energy_onshore application v{version}."
-    )
+    message= time + " ENERGY: capacity factor (S type) computed using the "\
+        "energy_onshore application."
 
     history = data_u100.attrs["history"] + data_v100.attrs["history"] + message
 
     # Import processing script.
 
-    u100 = data_u100["u"][:, 0, :, :]
-    v100 = data_v100["v"][:, 0, :, :]
+    u100 = data_u100["100u"][:, 0, :, :]
+    v100 = data_v100["100v"][:, 0, :, :]
 
     w_s = wind_speed(u100, v100)
 
     c_f = capacity_factor(w_s, iec_class="S")
+    c_f.attrs['history']=history
 
-    # Global attrs:
-    c_f.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
-
-    c_f.attrs["history"] = history
-    
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cf_S.nc")
+    output_file_path = os.path.join(out_path, f"cf_S_{w_s['time'].values[0]}.nc")
 
     c_f.to_netcdf(path=output_file_path, mode="w")
-    print("Capacity factor for turbine type 'S' has been produced and saved to: ", output_file_path)
+
+
 
 
 # Cooling degree days (CDD)
@@ -542,7 +405,7 @@ def run_capacity_factor_s(
 
 def run_cdd(iniyear, inimonth, iniday, in_path, out_path):
     """
-
+    
 
     Parameters
     ----------
@@ -578,22 +441,13 @@ def run_cdd(iniyear, inimonth, iniday, in_path, out_path):
     data_min = xr.open_dataset(absolute_path_min)
 
     # time
-    time = get_time_utc()
+    time=get_time_utc()
 
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + " ENERGY: cooling degree days computed using the "
-        f" energy_onshore application v{version}."
-    )
+    message= time + " ENERGY: cooling degree days computed using the "\
+        "energy_onshore application."
 
-    history = (
-        data.attrs["history"]
-        + data_max.attrs["history"]
-        + data_min.attrs["history"]
-        + message
-    )
+    history = data.attrs["history"] + data_max.attrs["history"] + \
+              data_min.attrs["history"] + message
     # Import processing script.
 
     data = data["2t"]
@@ -604,43 +458,23 @@ def run_cdd(iniyear, inimonth, iniday, in_path, out_path):
     t_n = convert_temperature(data_min, unit="C")
 
     cdd, cdd_acc = cooling_degree_days(t_m, t_x, t_n, base=22.0)
+    cdd.attrs['history']=history
 
-    # Global attrs:
-    cdd.attrs = {"resolution": data_max.attrs["resolution"],
-            "generation": data_max.attrs["generation"],
-            "activity": data_max.attrs["activity"],
-            "dataset": data_max.attrs["dataset"],
-            "stream": data_max.attrs["stream"],
-            "model": data_max.attrs["model"],
-            "experiment": data_max.attrs["experiment"],
-            "levtype": data_max.attrs["levtype"],
-            "expver": data_max.attrs["expver"],
-            "class": data_max.attrs["class"],
-            "type": data_max.attrs["type"],
-            "realization": data_max.attrs["realization"]
-            }
-
-    cdd.attrs["history"] = history
-    cdd_acc.attrs["history"] = history
-
-    cdd_acc.attrs = cdd.attrs
-
-    date = pd.to_datetime(data['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cdd.nc")
-    output_file_path1 = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cdd_acc.nc")
+    output_file_path = os.path.join(out_path, f"cdd_{t_m['time'].values[0]}.nc")
+    output_file_path1 = os.path.join(out_path, f"cdd_acc_{t_m['time'].values[0]}.nc")
 
     cdd.to_netcdf(path=output_file_path, mode="w")
     cdd_acc.to_netcdf(path=output_file_path1, mode="w")
-    print("Cooling degree days have been produced and saved to: ", output_file_path)
+
+
+
 
 # Heating degree days (HDD)
 
 
 def run_hdd(iniyear, inimonth, iniday, in_path, out_path):
     """
-
+    
 
     Parameters
     ----------
@@ -661,6 +495,7 @@ def run_hdd(iniyear, inimonth, iniday, in_path, out_path):
 
     """
 
+
     # Provide the data file name for all variables
     t_file = f"{iniyear}_{inimonth}_{iniday}_2t_timestep_60_daily_mean.nc"
     tmax_file = f"{iniyear}_{inimonth}_{iniday}_2t_timestep_60_daily_max.nc"
@@ -675,22 +510,12 @@ def run_hdd(iniyear, inimonth, iniday, in_path, out_path):
     data_min = xr.open_dataset(absolute_path_min)
 
     # time
-    time = get_time_utc()
+    time=get_time_utc()
 
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + f" ENERGY: heating degree days computed using the "
-        f"energy_onshore application v{version}."
-    )
+    message= time + " ENERGY: heating degree days computed using the energy_onshore application."
 
-    history = (
-        data.attrs["history"]
-        + data_max.attrs["history"]
-        + data_min.attrs["history"]
-        + message
-    )
+    history = data.attrs["history"] + data_max.attrs["history"] + data_min.attrs["history"] + \
+    message
 
     # Import processing script.
 
@@ -702,38 +527,16 @@ def run_hdd(iniyear, inimonth, iniday, in_path, out_path):
     t_n = convert_temperature(data_min, unit="C")
 
     hdd, hdd_acc = heating_degree_days(t_m, t_x, t_n, base=15.5)
-    hdd.attrs["history"] = history  # add hdd_acc output? --> it applies also for cdd
+    hdd.attrs['history']=history #add hdd_acc output? --> it applies also for cdd
 
-    # Global attrs:
-    hdd.attrs = {"resolution": data_max.attrs["resolution"],
-            "generation": data_max.attrs["generation"],
-            "activity": data_max.attrs["activity"],
-            "dataset": data_max.attrs["dataset"],
-            "stream": data_max.attrs["stream"],
-            "model": data_max.attrs["model"],
-            "experiment": data_max.attrs["experiment"],
-            "levtype": data_max.attrs["levtype"],
-            "expver": data_max.attrs["expver"],
-            "class": data_max.attrs["class"],
-            "type": data_max.attrs["type"],
-            "realization": data_max.attrs["realization"]
-            }
-
-    hdd_acc.attrs = hdd.attrs
-
-    hdd.attrs["history"] = history
-    hdd_acc.attrs["history"] = history
-
-
-    date = pd.to_datetime(data['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_hdd.nc")
-    output_file_path1 = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_hdd_acc.nc")
+    output_file_path = os.path.join(out_path, f"hdd_{t_m['time'].values[0]}.nc")
+    output_file_path1 = os.path.join(out_path, f"hdd_acc_{t_m['time'].values[0]}.nc")
 
     hdd.to_netcdf(path=output_file_path, mode="w")
     hdd_acc.to_netcdf(path=output_file_path1, mode="w")
-    print("Heating degree days have been produced and saved to: ", output_file_path)
+
+
+
 
 # High wind events
 
@@ -742,7 +545,7 @@ def run_high_wind_events(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
 ):
     """
-
+    
 
     Parameters
     ----------
@@ -771,14 +574,10 @@ def run_high_wind_events(
 
     # Provide the data file name for all variables
 
-    u100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_u_raw_data.nc"
-    )
-    v100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_v_raw_data.nc"
-    )
+    u100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+        "T23_00_100u_raw_data.nc"
+    v100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+        "T23_00_100v_raw_data.nc"
 
     absolute_path_u100 = os.path.join(in_path, u100_file)
     absolute_path_v100 = os.path.join(in_path, v100_file)
@@ -787,51 +586,28 @@ def run_high_wind_events(
     data_v100 = xr.open_dataset(absolute_path_v100)
 
     # time
-    time = get_time_utc()
+    time=get_time_utc()
 
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + " ENERGY: high wind events computed using the "
-        f"energy_onshore application v{version}."
-    )
+    message= time + " ENERGY: high wind events computed using the energy_onshore application."
 
     history = data_u100.attrs["history"] + data_v100.attrs["history"] + message
 
     # Import processing script.
 
-    u100 = data_u100["u"][:, 0, :, :]
-    v100 = data_v100["v"][:, 0, :, :]
+    u100 = data_u100["100u"][:, 0, :, :]
+    v100 = data_v100["100v"][:, 0, :, :]
 
     w_s = wind_speed(u100, v100)
 
     hwe = high_wind_events(w_s, threshold=25.0)
-    
-    # Global attrs:
-    hwe.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
-    
-    hwe.attrs["history"] = history
+    hwe.attrs['history']=history
 
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_hwe.nc")
+    output_file_path = os.path.join(out_path, f"hwe_{w_s['time'].values[0]}.nc")
 
     hwe.to_netcdf(path=output_file_path, mode="w")
-    print("High wind events have been produced and saved to: ", output_file_path)
+
+
+
 
 # Low wind events
 
@@ -840,7 +616,7 @@ def run_low_wind_events(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
 ):
     """
-
+    
 
     Parameters
     ----------
@@ -869,14 +645,10 @@ def run_low_wind_events(
 
     # Provide the data file name for all variables
 
-    u100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_u_raw_data.nc"
-    )
-    v100_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"
-        "T23_00_v_raw_data.nc"
-    )
+    u100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+        "T23_00_100u_raw_data.nc"
+    v100_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_to_{finyear}_{finmonth}_{finday}_"\
+        "T23_00_100v_raw_data.nc"
 
     absolute_path_u100 = os.path.join(in_path, u100_file)
     absolute_path_v100 = os.path.join(in_path, v100_file)
@@ -885,137 +657,23 @@ def run_low_wind_events(
     data_v100 = xr.open_dataset(absolute_path_v100)
 
     # time
-    time = get_time_utc()
+    time=get_time_utc()
 
-    # version
-    version = get_application_version()
-    
-    message = (
-        time + " ENERGY: low wind events computed using the "
-        f"energy_onshore application v{version}."
-    )
+    message= time + " ENERGY: low wind events computed using the energy_onshore application."
 
     history = data_u100.attrs["history"] + data_v100.attrs["history"] + message
 
     # Import processing script.
 
-    u100 = data_u100["u"][:, 0, :, :]
-    v100 = data_v100["v"][:, 0, :, :]
+    u100 = data_u100["100u"][:, 0, :, :]
+    v100 = data_v100["100v"][:, 0, :, :]
 
     w_s = wind_speed(u100, v100)
-   
+
     lwe = low_wind_events(w_s, threshold=3.0)
 
-    # Global attrs:
-    lwe.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
+    lwe.attrs['history']=history
 
-    lwe.attrs["history"] = history
-
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-
-    output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_lwe.nc")
+    output_file_path = os.path.join(out_path, f"lwe_{w_s['time'].values[0]}.nc")
 
     lwe.to_netcdf(path=output_file_path, mode="w")
-    print("Low wind events have been produced and saved to: ", output_file_path)
-
-def run_capacity_factor_histogram_opa(
-    iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path
-):
-    """
-
-    Parameters
-    ----------
-    iniyear : string
-        initial year of the streamed data YYYY.
-    inimonth : string
-        initial month of the streamed data MM.
-    iniday : string
-        initial day of the streamed data DD.
-    finyear : string
-        final year of the streamed data YYYY.
-    finmonth : string
-        final month of the streamed data MM.
-    finday : string
-        final day of the streamed data DD.
-    in_path : string
-        root path where to get the data from.
-    out_path : string
-        path where the output data goes to.
-
-    Returns
-    -------
-    None.
-
-    """
-
-    # Provide the data file name for all variables
-
-    cf_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_cf_I.nc"
-    )
-
-    absolute_path_cf = os.path.join(in_path, cf_file)
-
-    data_cf = xr.open_dataset(absolute_path_cf)
-
-    cf = data_cf["cf"]
-    
-    # Global attrs:
-    cf.attrs = data_cf.attrs.copy()
-
-    capacity_factor_histogram_opa(cf,in_path)
-
-    # time
-#    time = get_time_utc()
-
-    # version
- #   version = get_application_version()
-    
-  #  message = (
-   #     time + " ENERGY: capacity factor computed using the "
-    #    f"energy_indicators application v{version}."
-    #)
-
-    #history = data_cf.attrs["history"] + data_cf.attrs["history"] + message
-
-    # Import processing script.
-    
-    #cf = data_cf["cf"][:, 0, :, :]
-
-    # Global attrs:
-    #cf.attrs = {"resolution": data_cf.attrs["resolution"],
-    #        "generation": data_cf.attrs["generation"],
-    #        "activity": data_cf.attrs["activity"],
-    #        "dataset": data_cf.attrs["dataset"],
-    #        "stream": data_cf.attrs["stream"],
-    #        "model": data_cf.attrs["model"],
-    #        "experiment": data_cf.attrs["experiment"],
-    #        "levtype": data_cf.attrs["levtype"],
-    #        "expver": data_cf.attrs["expver"],
-    #        "class": data_cf.attrs["class"],
-    #        "type": data_cf.attrs["type"],
-    #        "realization": data_cf.attrs["realization"]
-    #        }
-
-    #cf.attrs["history"] = history
-
-    #date = pd.to_datetime(cf['time'].values[0])
-    #YYYY_MM_DD = date.strftime('%Y_%m_%d')
-
-    #output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_lwe.nc")
-
-    #lwe.to_netcdf(path=output_file_path, mode="w")
-    #print("Low wind events have been produced and saved to: ", output_file_path)

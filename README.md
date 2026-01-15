@@ -1,14 +1,12 @@
-# Energy Indicators (formely Energy Onshore)
+# Energy Onshore
 
-![latest_release](https://earth.bsc.es/gitlab/digital-twins/de_340-2/energy_onshore/-/badges/release.svg)
+![latest_release](https://earth.bsc.es/gitlab/digital-twins/de_340/energy_onshore/-/badges/release.svg)
 
-This repository contains the scripts related to the Energy Onshore - Energy indicators use case of the Climate Adaptation Digital Twin (Climate DT). All the work is being developed in the frame of the [Destination Earth initiative](https://destination-earth.eu/) from the European Commission, where [ECMWF](https://destine.ecmwf.int/) is one of the Entrusted Entities.
-
-LICENSE NOTE: the European Union, represented by the European Commission is the direct and sole owner of the intellectual property rights of these Results. 
+This repository contains the scripts related to the Energy Onshore use case (WP10 phase1, A10 phase2) of the Climate Adaptation Digital Twin (Climate DT). All the work is being developed in the frame of the Destination Earth initiative.
 
 ## Description
 
-The Energy Onshore application is currently being developed as a Python package, with two core scripts, `wind.py`, containing a comprehensive set of wind energy indicators and `solar.py`, containing a limited set of solar energy indicators, supporting scripts containing auxiliary functions for data pre- and post-processing, `core.py`, and a wrapper script to envelope the whole structure, `run_energy_onshore.py`.
+The Energy Onshore application is currently being developed as a Python package, with two core scripts, `wind.py`, containing a comprehensive set of wind energy indicators and `solar.py`, containing a limited set of solar energy indicators, supporting scripts containing auxiliary functions for data pre- and post-processing, `core.py`, and a wrapper script to envelope the whole structure, `run_energy_onshore.py`. The final version will be accessed through an interactive Jupyter Notebook, an API or through another type of interface not yet determined.
 
 ## Implemented indicators
 
@@ -24,9 +22,9 @@ The Energy Onshore application is currently being developed as a Python package,
     Histogram of capacity factors over a 2D grid.
 - **Capacity Factor Histogram (1D)** \
     Histogram of capacity factors at a given location.
-- **Wind Speed Histogram** (now comes from the OPA)\
+- **Wind Speed Histogram** \
     Histogram of wind speed over a 2D grid.
-- **Wind Speed Histogram (1D)** (now comes from the OPA)\
+- **Wind Speed Histogram (1D)** \
     Histogram of wind speed at a given location.
 - **Annual Energy Production (AEP)** \
     Energy produced by a wind turbine / wind farm over a year.
@@ -251,8 +249,8 @@ path_to_data = 'path/to/data/'
 data = xr.open_dataset(path_to_data + 'data.nc')
 data.close()
 
-u100 = data['u']
-v100 = data['v']
+u100 = data['100u']
+v100 = data['100v']
 
 # Compute wind speed
 ws = wind_speed(u100, v100)
@@ -488,27 +486,3 @@ pytest .
 pytest --pdb
 ```
 
-## How to crete the stac catalog from the output:
-
-### Non-DestinE catalog:
-
-1. create a `data` directory, where you store your output.
-
-```
-mkdir data
-```
-
-2. run the `generate_stac_catalog.py` sctipt (one dir above `data`).
-
-```
-python3 generate_stac_catalog.py
-```
-
-### Catalog to be transferred to the Eumetsat Datalake:
-
-Follow these instructions https://destine-data-lake-docs.data.destination-earth.eu/en/latest/dedl-discovery-and-data-access/User-Generated-Data/Promote-user-data-to-become-DestinE-data/Promote-user-data-to-become-DestinE-data.html#step-4-data-preparation
-
-### Liscence
-
-Copyright 2022-2025 European Union (represented by the European Commission)
-The Energy Indicators package is distributed as open-source software under Apache 2.0 License. The copyright owner is the European Union, represented by the European Commission. The development of the Energy Indicators package has been funded by the European Union through Contract DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT). Further info can be found at https://destine.ecmwf.int/ and https://destination-earth.eu/
