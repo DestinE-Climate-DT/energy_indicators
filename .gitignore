@@ -1,0 +1,7 @@
+build/
+**/htmlcov/
+**/*.egg-info/
+venv/
+.coverage
+docs/build/*
+

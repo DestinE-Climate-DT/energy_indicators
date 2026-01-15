@@ -1,0 +1,89 @@
+stages:
+  - lint
+  - test
+  - docs
+  - mirror
+
+cache:
+  paths:
+    - .cache/pip
+
+.default-python-job:
+  id_tokens:
+    CI_JOB_JWT:
+      aud: https://gitlab.earth.bsc.es
+  tags: [csccloud]
+  before_script:
+    - python3.11 -m venv .venv
+    - source .venv/bin/activate
+    - python -m pip install --upgrade pip
+    - pip install -e .[all]
+    - pip install pylint
+    - git config --global user.email "ci@example.com"
+    - git config --global user.name "GitLab CI"
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    GITHUB_REPO: "DestinE-Climate-DT/energy_indicators_test"
+      #    Ulf Tigerstedt: 15.10.2025
+      #    CI_ environment variables are set by gitlab-runner for the CI system
+      #    They are not to be set in .gitlab-ci.yml, and especially CI_COMMIT_TAG will
+      #    break the build. Don't.
+      #    CI_COMMIT_TAG: "test33" # Can be overridden when running the pipeline
+
+lint-core:
+  stage: lint
+  extends: .default-python-job
+  script:
+    - python -m pylint --fail-under=9.5 energy_onshore/core.py
+
+lint-solar:
+  stage: lint
+  extends: .default-python-job
+  script:
+    - python -m pylint --fail-under=9.5 energy_onshore/solar.py
+
+lint-wind:
+  stage: lint
+  extends: .default-python-job
+  script:
+    - python -m pylint --fail-under=9.5 energy_onshore/wind.py
+
+lint-init:
+  stage: lint
+  extends: .default-python-job
+  script:
+    - python -m pylint --fail-under=9.5 energy_onshore/__init__.py
+
+test:
+  stage: test
+  extends: .default-python-job
+  script:
+    - pytest .
+
+docs:
+  stage: docs
+  extends: .default-python-job
+  script:
+    - make docs-html
+
+mirror:
+  stage: mirror
+  extends: .default-python-job
+    #variables:
+    #GITHUB_REPO: "DestinE-Climate-DT/energy_indicators"
+    #CI_COMMIT_TAG: "v1.1.4" # Can be overridden when running the pipeline
+  script:
+    - echo "$(echo -n $GH_PAT | wc -c)"
+    # Create an orphan branch to avoid history
+    - git checkout --orphan mirror-temp
+    # Add all current files
+    - git add -A
+    - git commit -m "Mirror commit for $CI_COMMIT_TAG"
+    # Tag the commit
+    - git tag -f $CI_COMMIT_TAG
+    # Add GitHub remote
+    - git remote add github https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPO}.git
+    # Push only the tag (no history)
+    - git push github refs/tags/$CI_COMMIT_TAG --force
+  rules:
+    - if: $CI_COMMIT_TAG
