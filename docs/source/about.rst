@@ -1,4 +1,3 @@
-
 ABOUT
 ========
 
@@ -19,4 +18,3 @@ Developers:
 Contributors:
 -----------------
 (TBA)
-

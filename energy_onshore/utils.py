@@ -59,7 +59,7 @@ def load_turbines():
         "rated_speed": 14.0,
         "cut_out_speed": 25.0,
     }
-    
+
     turbine_class = [class_i, class_i_ii, class_ii, class_ii_iii, class_iii, class_s]
-    
+
     return turbine_class

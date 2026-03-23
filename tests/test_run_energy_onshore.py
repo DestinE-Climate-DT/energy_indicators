@@ -43,13 +43,16 @@ finmonth = "01"
 finday = "01"
 maskfile = "test_data/testmask.nc"
 
+
 # test get time UTC
 def test_get_time_utc():
     assert get_time_utc()
 
+
 # test get app version
 def test_get_application_version():
     assert get_application_version()
+
 
 # Wind direction
 def test_run_wind_direction(
@@ -62,15 +65,11 @@ def test_run_wind_direction(
     maskfile=maskfile,
 ):
     assert (
-        run_wind_direction(
-            iniyear, inimonth, iniday, in_path, out_path, mask=maskfile
-        )
+        run_wind_direction(iniyear, inimonth, iniday, in_path, out_path, mask=maskfile)
         is None
     )
     assert (
-        run_wind_direction(
-            iniyear, inimonth, iniday, in_path, out_path, mask=None
-        )
+        run_wind_direction(iniyear, inimonth, iniday, in_path, out_path, mask=None)
         is None
     )
 
@@ -96,16 +95,33 @@ def test_run_capacity_factor_i(
 ):
     assert (
         run_capacity_factor_i(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=maskfile
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=maskfile,
         )
         is None
     )
     assert (
         run_capacity_factor_i(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=None,
         )
         is None
     )
+
 
 # Capacity factor (class II)
 def test_run_capacity_factor_ii(
@@ -121,13 +137,29 @@ def test_run_capacity_factor_ii(
 ):
     assert (
         run_capacity_factor_ii(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=maskfile
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=maskfile,
         )
         is None
     )
     assert (
         run_capacity_factor_ii(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=None,
         )
         is None
     )
@@ -147,13 +179,29 @@ def test_run_capacity_factor_iii(
 ):
     assert (
         run_capacity_factor_iii(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=maskfile
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=maskfile,
         )
         is None
     )
     assert (
         run_capacity_factor_iii(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=None,
         )
         is None
     )
@@ -173,13 +221,29 @@ def test_run_capacity_factor_s(
 ):
     assert (
         run_capacity_factor_s(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=maskfile
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=maskfile,
         )
         is None
     )
     assert (
         run_capacity_factor_s(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=None,
         )
         is None
     )
@@ -225,13 +289,29 @@ def test_run_high_wind_events(
 ):
     assert (
         run_high_wind_events(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=maskfile
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=maskfile,
         )
         is None
     )
     assert (
         run_high_wind_events(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=None,
         )
         is None
     )
@@ -251,17 +331,34 @@ def test_run_low_wind_events(
 ):
     assert (
         run_low_wind_events(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=maskfile
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=maskfile,
         )
         is None
     )
     assert (
         run_low_wind_events(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=None,
         )
         is None
     )
-    
+
+
 def test_run_capacity_factor_histogram_opa(
     iniyear=iniyear,
     inimonth=inimonth,
@@ -273,10 +370,28 @@ def test_run_capacity_factor_histogram_opa(
     out_path=out_path,
 ):
     run_capacity_factor_histogram_opa(
-        iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, cf_type='I'
+        iniyear,
+        inimonth,
+        iniday,
+        finyear,
+        finmonth,
+        finday,
+        in_path,
+        out_path,
+        cf_type="I",
+        nworkers=2,
     )
     run_capacity_factor_histogram_opa(
-        iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, cf_type='II'
+        iniyear,
+        inimonth,
+        iniday,
+        finyear,
+        finmonth,
+        finday,
+        in_path,
+        out_path,
+        cf_type="II",
+        nworkers=1,
     )
     assert (
         run_capacity_factor_histogram_opa(
@@ -284,6 +399,7 @@ def test_run_capacity_factor_histogram_opa(
         )
         is None
     )
+
 
 # pv_potential
 def test_run_pv_potential(
@@ -298,11 +414,27 @@ def test_run_pv_potential(
     maskfile=maskfile,
 ):
     run_low_wind_events(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=maskfile
-        )
+        iniyear,
+        inimonth,
+        iniday,
+        finyear,
+        finmonth,
+        finday,
+        in_path,
+        out_path,
+        mask=maskfile,
+    )
     assert (
         run_low_wind_events(
-            iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
+            iniyear,
+            inimonth,
+            iniday,
+            finyear,
+            finmonth,
+            finday,
+            in_path,
+            out_path,
+            mask=None,
         )
         is None
     )

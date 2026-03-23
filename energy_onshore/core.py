@@ -16,6 +16,7 @@ import pandas as pd
 
 # GSV data post-processing and basic analysis.
 
+
 def check_temperature(data):
     """
     Check if temperature is in Kelvin or Celsius.
@@ -69,9 +70,9 @@ def convert_temperature(t, unit="C"):
         Air temperature at 2m (in Kelvin/Celsius).
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(t) == "DataArray"
-    ), 'The input variable "t" is not an xarray.DataArray.'
+    assert get_type(t) == "DataArray", (
+        'The input variable "t" is not an xarray.DataArray.'
+    )
     unit = unit.upper()
     if unit not in ["C", "K"]:
         raise ValueError("The specified temperature unit is not valid.")
@@ -85,7 +86,8 @@ def convert_temperature(t, unit="C"):
 
     return t_conv
 
-#def check_radiation(data):
+
+# def check_radiation(data):
 #    """
 #    Check if radiation is in J/m2 or W/m2.
 #
@@ -121,7 +123,7 @@ def convert_temperature(t, unit="C"):
 #    return unit
 #
 
-#def convert_radiation(rsds):
+# def convert_radiation(rsds):
 #    """
 #    Convert radiation from J/m2 to W/m2 by dividing by 3600 seconds.
 #
@@ -154,6 +156,7 @@ def convert_temperature(t, unit="C"):
 #    return r_conv
 #
 
+
 def wind_speed(u, v):
     """
     Compute wind speed magnitude from u and v components.
@@ -171,12 +174,12 @@ def wind_speed(u, v):
         Wind speed magnitude.
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(u) == "DataArray"
-    ), 'The input variable "u" is not an xarray.DataArray.'
-    assert (
-        get_type(v) == "DataArray"
-    ), 'The input variable "v" is not an xarray.DataArray.'
+    assert get_type(u) == "DataArray", (
+        'The input variable "u" is not an xarray.DataArray.'
+    )
+    assert get_type(v) == "DataArray", (
+        'The input variable "v" is not an xarray.DataArray.'
+    )
 
     # Compute wind speed magnitude.
     ws = np.sqrt(u**2 + v**2)
@@ -219,18 +222,18 @@ def cosine_sza_hourly(start_date, end_date, lats, lons):
     [1]: https://doi.org/10.1002/2015GL066868
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(start_date) == "datetime64"
-    ), 'The input variable "start_date" is not a numpy.datetime64.'
-    assert (
-        get_type(end_date) == "datetime64"
-    ), 'The input variable "end_date" is not a numpy.datetime64.'
-    assert (
-        get_type(lats) == "ndarray"
-    ), 'The input variable "lats" is not a numpy.ndarray.'
-    assert (
-        get_type(lons) == "ndarray"
-    ), 'The input variable "lons" is not a numpy.ndarray.'
+    assert get_type(start_date) == "datetime64", (
+        'The input variable "start_date" is not a numpy.datetime64.'
+    )
+    assert get_type(end_date) == "datetime64", (
+        'The input variable "end_date" is not a numpy.datetime64.'
+    )
+    assert get_type(lats) == "ndarray", (
+        'The input variable "lats" is not a numpy.ndarray.'
+    )
+    assert get_type(lons) == "ndarray", (
+        'The input variable "lons" is not a numpy.ndarray.'
+    )
 
     # Degrees to radians conversion factor
     deg_to_rad = np.pi / 180.0
@@ -306,6 +309,7 @@ def cosine_sza_hourly(start_date, end_date, lats, lons):
 
 # Statistical analysis.
 
+
 def percentile(var, wanted_percentile, axis=0):
     """
     Compute percentile of a variable along a given axis (i.e. dimension).
@@ -325,15 +329,15 @@ def percentile(var, wanted_percentile, axis=0):
         Percentile of the variable.
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(var) == "DataArray"
-    ), 'The input variable "var" is not an xarray.DataArray.'
-    assert (
-        get_type(wanted_percentile) == "float"
-    ), 'The input variable "percentile" is not a float.'
-    assert (
-        get_type(axis) == "int" or get_type(axis) == "tuple"
-    ), 'The input variable "axis" is not an int / tuple.'
+    assert get_type(var) == "DataArray", (
+        'The input variable "var" is not an xarray.DataArray.'
+    )
+    assert get_type(wanted_percentile) == "float", (
+        'The input variable "percentile" is not a float.'
+    )
+    assert get_type(axis) == "int" or get_type(axis) == "tuple", (
+        'The input variable "axis" is not an int / tuple.'
+    )
 
     # Compute percentile of the variable.
     perc = np.percentile(var, wanted_percentile, axis=axis)
@@ -355,12 +359,12 @@ def moving_average(data, window_size):
         Moving average of the variable.
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(data) == "ndarray"
-    ), 'The input variable "data" is not an numpy.ndarray.'
-    assert (
-        get_type(window_size) == "int"
-    ), 'The input variable "window_size" is not an int.'
+    assert get_type(data) == "ndarray", (
+        'The input variable "data" is not an numpy.ndarray.'
+    )
+    assert get_type(window_size) == "int", (
+        'The input variable "window_size" is not an int.'
+    )
 
     # Compute moving average of the variable.
     avg = np.cumsum(data, axis=0)
@@ -370,6 +374,7 @@ def moving_average(data, window_size):
 
 
 # Data restructuring and resampling.
+
 
 def temporal_rescaling(var, scale="None"):
     """
@@ -389,9 +394,9 @@ def temporal_rescaling(var, scale="None"):
         Rescaled variable.
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(var) == "DataArray"
-    ), 'The input variable "var" is not an xarray.DataArray.'
+    assert get_type(var) == "DataArray", (
+        'The input variable "var" is not an xarray.DataArray.'
+    )
 
     # Check if scale is valid.
     scale = scale.lower()
@@ -434,15 +439,15 @@ def select_region(data, latbox, lonbox):
         Data array at selected region.
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(data) == "DataArray"
-    ), 'The input variable "data" is not an xarray.DataArray.'
-    assert (
-        get_type(lonbox) == "tuple" or get_type(lonbox) == "list"
-    ), 'The input variable "lonbox" is not a tuple / list.'
-    assert (
-        get_type(latbox) == "tuple" or get_type(latbox) == "list"
-    ), 'The input variable "latbox" is not a tuple / list.'
+    assert get_type(data) == "DataArray", (
+        'The input variable "data" is not an xarray.DataArray.'
+    )
+    assert get_type(lonbox) == "tuple" or get_type(lonbox) == "list", (
+        'The input variable "lonbox" is not a tuple / list.'
+    )
+    assert get_type(latbox) == "tuple" or get_type(latbox) == "list", (
+        'The input variable "latbox" is not a tuple / list.'
+    )
 
     # Select the region from the data array.
     out = data.sel(lat=slice(*latbox), lon=slice(*lonbox))
@@ -469,15 +474,15 @@ def select_point(data, target_lon, target_lat):
         Data array at closest point.
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(data) == "DataArray"
-    ), 'The input variable "data" is not an xarray.DataArray.'
-    assert (
-        get_type(target_lon) == "float"
-    ), 'The input variable "target_lon" is not a float.'
-    assert (
-        get_type(target_lat) == "float"
-    ), 'The input variable "target_lat" is not a float.'
+    assert get_type(data) == "DataArray", (
+        'The input variable "data" is not an xarray.DataArray.'
+    )
+    assert get_type(target_lon) == "float", (
+        'The input variable "target_lon" is not a float.'
+    )
+    assert get_type(target_lat) == "float", (
+        'The input variable "target_lat" is not a float.'
+    )
 
     # Select the closest point from the data array.
     out = data.sel(lon=target_lon, lat=target_lat, method="nearest")
@@ -486,6 +491,7 @@ def select_point(data, target_lon, target_lat):
 
 
 # Other support functions.
+
 
 def create_dataset(variables, attrs, coords, dims):
     """
@@ -509,16 +515,16 @@ def create_dataset(variables, attrs, coords, dims):
         An empty xarray Dataset containing the specified variables, coordinates and dimensions.
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(variables) == "dict"
-    ), 'The input variable "vars" is not a dictionary.'
+    assert get_type(variables) == "dict", (
+        'The input variable "vars" is not a dictionary.'
+    )
     assert get_type(attrs) == "dict", 'The input variable "attrs" is not a dictionary.'
-    assert (
-        get_type(coords) == "dict"
-    ), 'The input variable "coords" is not a dictionary.'
-    assert (
-        get_type(dims) == "tuple" or get_type(dims) == "str"
-    ), 'The input variable "dims" is not a tuple / str.'
+    assert get_type(coords) == "dict", (
+        'The input variable "coords" is not a dictionary.'
+    )
+    assert get_type(dims) == "tuple" or get_type(dims) == "str", (
+        'The input variable "dims" is not a tuple / str.'
+    )
 
     # Create data_vars dictionary
     data_vars = {var_name: (dims, variables[var_name]) for var_name in variables}

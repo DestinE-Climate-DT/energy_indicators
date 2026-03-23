@@ -1,4 +1,10 @@
 # Changelog
+# v2.0.3 (03/2026)
+
+### Added
+
+- Added multiprocessing support for cf histogram calculation.
+- Added ruff formatting to Makefile.
 
 # v2.0.2 (24/11/2025)
 

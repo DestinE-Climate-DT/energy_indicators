@@ -6,10 +6,8 @@ Welcome to Energy Onshore's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Table of Contents
+   :caption: Contents
 
-   about
-   introduction
-   testing
-   how_to_contribute
-   tutorial
+   general_description
+   user_guide/
+   user_guide/without_the_workflow

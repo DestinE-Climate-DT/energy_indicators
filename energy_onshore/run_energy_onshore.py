@@ -36,8 +36,8 @@ from energy_onshore.wind import (
 from energy_onshore.solar import pv_pot
 
 
-
 # get time UTC
+
 
 def get_time_utc():  # add pytest
     """
@@ -56,6 +56,7 @@ def get_time_utc():  # add pytest
     formatted_time = current_time_utc.strftime("%Y-%m-%d %H:%M:%S")
     return formatted_time
 
+
 def get_application_version():
     """
     Parameters
@@ -66,12 +67,13 @@ def get_application_version():
     -------
     package version.
     """
-    version=importlib.metadata.version('energy_onshore')
-    
+    version = importlib.metadata.version("energy_onshore")
+
     return version
 
 
 # Wind direction
+
 
 def run_wind_direction(iniyear, inimonth, iniday, in_path, out_path, mask=None):
     """
@@ -132,24 +134,25 @@ def run_wind_direction(iniyear, inimonth, iniday, in_path, out_path, mask=None):
     wind_dir = wind_direction(u100, v100, mask=mask)
 
     # Global attrs:
-    wind_dir.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
+    wind_dir.attrs = {
+        "resolution": data_u100.attrs["resolution"],
+        "generation": data_u100.attrs["generation"],
+        "activity": data_u100.attrs["activity"],
+        "dataset": data_u100.attrs["dataset"],
+        "stream": data_u100.attrs["stream"],
+        "model": data_u100.attrs["model"],
+        "experiment": data_u100.attrs["experiment"],
+        "levtype": data_u100.attrs["levtype"],
+        "expver": data_u100.attrs["expver"],
+        "class": data_u100.attrs["class"],
+        "type": data_u100.attrs["type"],
+        "realization": data_u100.attrs["realization"],
+    }
 
     wind_dir.attrs["history"] = history
 
-    date = pd.to_datetime(wind_dir['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
+    date = pd.to_datetime(wind_dir["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
 
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_wd.nc")
 
@@ -159,7 +162,10 @@ def run_wind_direction(iniyear, inimonth, iniday, in_path, out_path, mask=None):
 
 # Wind speed anomalies
 
-def run_wind_speed_anomalies(iniyear, inimonth, iniday, in_path, out_path, hpcprojdir, mask=None):
+
+def run_wind_speed_anomalies(
+    iniyear, inimonth, iniday, in_path, out_path, hpcprojdir, mask=None
+):
     """
     Parameters
     ----------
@@ -195,12 +201,12 @@ def run_wind_speed_anomalies(iniyear, inimonth, iniday, in_path, out_path, hpcpr
 
     # time
     time = get_time_utc()
-    
+
     # version
     version = get_application_version()
-    
+
     message = (
-        time + f" ENERGY: wind speed anomalies computed using the " 
+        time + f" ENERGY: wind speed anomalies computed using the "
         "energy_indicators application v{version}."
     )
 
@@ -229,8 +235,8 @@ def run_wind_speed_anomalies(iniyear, inimonth, iniday, in_path, out_path, hpcpr
 
     ws_anom = wind_speed_anomalies(w_s, clim_100m, scale="daily")
 
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
+    date = pd.to_datetime(w_s["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
 
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_ws100_anom.nc")
 
@@ -241,6 +247,7 @@ def run_wind_speed_anomalies(iniyear, inimonth, iniday, in_path, out_path, hpcpr
 
 
 # Capacity factor (class I)
+
 
 def run_capacity_factor_i(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
@@ -295,7 +302,7 @@ def run_capacity_factor_i(
 
     # version
     version = get_application_version()
-    
+
     message = (
         time + " ENERGY: capacity factor (I type) computed using the "
         f"energy_indicators application v{version}."
@@ -314,19 +321,20 @@ def run_capacity_factor_i(
     c_f = capacity_factor(w_s, iec_class="I", mask=mask)
 
     # Global attrs:
-    c_f.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"], 
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
+    c_f.attrs = {
+        "resolution": data_u100.attrs["resolution"],
+        "generation": data_u100.attrs["generation"],
+        "activity": data_u100.attrs["activity"],
+        "dataset": data_u100.attrs["dataset"],
+        "stream": data_u100.attrs["stream"],
+        "model": data_u100.attrs["model"],
+        "experiment": data_u100.attrs["experiment"],
+        "levtype": data_u100.attrs["levtype"],
+        "expver": data_u100.attrs["expver"],
+        "class": data_u100.attrs["class"],
+        "type": data_u100.attrs["type"],
+        "realization": data_u100.attrs["realization"],
+    }
 
     # Add mask attribute to global attributes if mask was applied
     if mask is not None:
@@ -334,16 +342,20 @@ def run_capacity_factor_i(
 
     c_f.attrs["history"] = history
 
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
+    date = pd.to_datetime(w_s["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
 
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cf_I.nc")
 
     c_f.to_netcdf(path=output_file_path, mode="w")
-    print("Capacity factor for turbine type 'I' has been produced and saved to: ", output_file_path)
+    print(
+        "Capacity factor for turbine type 'I' has been produced and saved to: ",
+        output_file_path,
+    )
 
 
 # Capacity factor (class II)
+
 
 def run_capacity_factor_ii(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
@@ -398,9 +410,9 @@ def run_capacity_factor_ii(
 
     # version
     version = get_application_version()
-    
+
     message = (
-        time + " ENERGY: capacity factor (II type) computed using the " 
+        time + " ENERGY: capacity factor (II type) computed using the "
         f"energy_indicators application v{version}."
     )
 
@@ -415,19 +427,20 @@ def run_capacity_factor_ii(
     c_f = capacity_factor(w_s, iec_class="II", mask=mask)
 
     # Global attrs:
-    c_f.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
+    c_f.attrs = {
+        "resolution": data_u100.attrs["resolution"],
+        "generation": data_u100.attrs["generation"],
+        "activity": data_u100.attrs["activity"],
+        "dataset": data_u100.attrs["dataset"],
+        "stream": data_u100.attrs["stream"],
+        "model": data_u100.attrs["model"],
+        "experiment": data_u100.attrs["experiment"],
+        "levtype": data_u100.attrs["levtype"],
+        "expver": data_u100.attrs["expver"],
+        "class": data_u100.attrs["class"],
+        "type": data_u100.attrs["type"],
+        "realization": data_u100.attrs["realization"],
+    }
 
     # Add mask attribute to global attributes if mask was applied
     if mask is not None:
@@ -435,16 +448,20 @@ def run_capacity_factor_ii(
 
     c_f.attrs["history"] = history
 
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
+    date = pd.to_datetime(w_s["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
+
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cf_II.nc")
 
     c_f.to_netcdf(path=output_file_path, mode="w")
-    print("Capacity factor for turbine type 'II' has been produced and saved to: ", output_file_path)
+    print(
+        "Capacity factor for turbine type 'II' has been produced and saved to: ",
+        output_file_path,
+    )
 
 
 # Capacity factor (class III)
+
 
 def run_capacity_factor_iii(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
@@ -499,7 +516,7 @@ def run_capacity_factor_iii(
 
     # version
     version = get_application_version()
-    
+
     message = (
         time + " ENERGY: capacity factor (III type) computed using the "
         f"energy_indicators application v{version}."
@@ -516,19 +533,20 @@ def run_capacity_factor_iii(
     c_f = capacity_factor(w_s, iec_class="III", mask=mask)
 
     # Global attrs:
-    c_f.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
+    c_f.attrs = {
+        "resolution": data_u100.attrs["resolution"],
+        "generation": data_u100.attrs["generation"],
+        "activity": data_u100.attrs["activity"],
+        "dataset": data_u100.attrs["dataset"],
+        "stream": data_u100.attrs["stream"],
+        "model": data_u100.attrs["model"],
+        "experiment": data_u100.attrs["experiment"],
+        "levtype": data_u100.attrs["levtype"],
+        "expver": data_u100.attrs["expver"],
+        "class": data_u100.attrs["class"],
+        "type": data_u100.attrs["type"],
+        "realization": data_u100.attrs["realization"],
+    }
 
     # Add mask attribute to global attributes if mask was applied
     if mask is not None:
@@ -536,16 +554,20 @@ def run_capacity_factor_iii(
 
     c_f.attrs["history"] = history
 
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
+    date = pd.to_datetime(w_s["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
+
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cf_III.nc")
 
     c_f.to_netcdf(path=output_file_path, mode="w")
-    print("Capacity factor for turbine type 'III' has been produced and saved to: ", output_file_path)
+    print(
+        "Capacity factor for turbine type 'III' has been produced and saved to: ",
+        output_file_path,
+    )
 
 
 # Capacity factor (class S)
+
 
 def run_capacity_factor_s(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
@@ -600,7 +622,7 @@ def run_capacity_factor_s(
 
     # version
     version = get_application_version()
-    
+
     message = (
         time + " ENERGY: capacity factor (S type) computed using the "
         f" energy_indicators application v{version}."
@@ -618,36 +640,41 @@ def run_capacity_factor_s(
     c_f = capacity_factor(w_s, iec_class="S", mask=mask)
 
     # Global attrs:
-    c_f.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
+    c_f.attrs = {
+        "resolution": data_u100.attrs["resolution"],
+        "generation": data_u100.attrs["generation"],
+        "activity": data_u100.attrs["activity"],
+        "dataset": data_u100.attrs["dataset"],
+        "stream": data_u100.attrs["stream"],
+        "model": data_u100.attrs["model"],
+        "experiment": data_u100.attrs["experiment"],
+        "levtype": data_u100.attrs["levtype"],
+        "expver": data_u100.attrs["expver"],
+        "class": data_u100.attrs["class"],
+        "type": data_u100.attrs["type"],
+        "realization": data_u100.attrs["realization"],
+    }
 
     # Add mask attribute to global attributes if mask was applied
     if mask is not None:
         c_f.attrs["mask"] = "yes"
 
     c_f.attrs["history"] = history
-    
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
+
+    date = pd.to_datetime(w_s["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
+
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cf_S.nc")
 
     c_f.to_netcdf(path=output_file_path, mode="w")
-    print("Capacity factor for turbine type 'S' has been produced and saved to: ", output_file_path)
+    print(
+        "Capacity factor for turbine type 'S' has been produced and saved to: ",
+        output_file_path,
+    )
 
 
 # Cooling degree days (CDD)
+
 
 def run_cdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
     """
@@ -691,7 +718,7 @@ def run_cdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
 
     # version
     version = get_application_version()
-    
+
     message = (
         time + " ENERGY: cooling degree days computed using the "
         f" energy_indicators application v{version}."
@@ -715,19 +742,20 @@ def run_cdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
     cdd = cooling_degree_days(t_m, t_x, t_n, base=22.0)
 
     # Global attrs:
-    cdd.attrs = {"resolution": data_max.attrs["resolution"],
-            "generation": data_max.attrs["generation"],
-            "activity": data_max.attrs["activity"],
-            "dataset": data_max.attrs["dataset"],
-            "stream": data_max.attrs["stream"],
-            "model": data_max.attrs["model"],
-            "experiment": data_max.attrs["experiment"],
-            "levtype": data_max.attrs["levtype"],
-            "expver": data_max.attrs["expver"],
-            "class": data_max.attrs["class"],
-            "type": data_max.attrs["type"],
-            "realization": data_max.attrs["realization"]
-            }
+    cdd.attrs = {
+        "resolution": data_max.attrs["resolution"],
+        "generation": data_max.attrs["generation"],
+        "activity": data_max.attrs["activity"],
+        "dataset": data_max.attrs["dataset"],
+        "stream": data_max.attrs["stream"],
+        "model": data_max.attrs["model"],
+        "experiment": data_max.attrs["experiment"],
+        "levtype": data_max.attrs["levtype"],
+        "expver": data_max.attrs["expver"],
+        "class": data_max.attrs["class"],
+        "type": data_max.attrs["type"],
+        "realization": data_max.attrs["realization"],
+    }
 
     # Add mask attribute to global attributes if mask was applied
     if mask is not None:
@@ -735,8 +763,8 @@ def run_cdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
 
     cdd.attrs["history"] = history
 
-    date = pd.to_datetime(data['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
+    date = pd.to_datetime(data["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
 
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_cdd.nc")
 
@@ -745,6 +773,7 @@ def run_cdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
 
 
 # Heating degree days (HDD)
+
 
 def run_hdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
     """
@@ -787,7 +816,7 @@ def run_hdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
 
     # version
     version = get_application_version()
-    
+
     message = (
         time + f" ENERGY: heating degree days computed using the "
         f"energy_indicators application v{version}."
@@ -810,22 +839,23 @@ def run_hdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
     t_n = convert_temperature(data_min, unit="C")
 
     hdd = heating_degree_days(t_m, t_x, t_n, base=15.5)
-    hdd.attrs["history"] = history 
+    hdd.attrs["history"] = history
 
     # Global attrs:
-    hdd.attrs = {"resolution": data_max.attrs["resolution"],
-            "generation": data_max.attrs["generation"],
-            "activity": data_max.attrs["activity"],
-            "dataset": data_max.attrs["dataset"],
-            "stream": data_max.attrs["stream"],
-            "model": data_max.attrs["model"],
-            "experiment": data_max.attrs["experiment"],
-            "levtype": data_max.attrs["levtype"],
-            "expver": data_max.attrs["expver"],
-            "class": data_max.attrs["class"],
-            "type": data_max.attrs["type"],
-            "realization": data_max.attrs["realization"]
-            }
+    hdd.attrs = {
+        "resolution": data_max.attrs["resolution"],
+        "generation": data_max.attrs["generation"],
+        "activity": data_max.attrs["activity"],
+        "dataset": data_max.attrs["dataset"],
+        "stream": data_max.attrs["stream"],
+        "model": data_max.attrs["model"],
+        "experiment": data_max.attrs["experiment"],
+        "levtype": data_max.attrs["levtype"],
+        "expver": data_max.attrs["expver"],
+        "class": data_max.attrs["class"],
+        "type": data_max.attrs["type"],
+        "realization": data_max.attrs["realization"],
+    }
 
     # Add mask attribute to global attributes if mask was applied
     if mask is not None:
@@ -833,8 +863,8 @@ def run_hdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
 
     hdd.attrs["history"] = history
 
-    date = pd.to_datetime(data['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
+    date = pd.to_datetime(data["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
 
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_hdd.nc")
 
@@ -843,6 +873,7 @@ def run_hdd(iniyear, inimonth, iniday, in_path, out_path, mask=None):
 
 
 # High wind events
+
 
 def run_high_wind_events(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
@@ -897,7 +928,7 @@ def run_high_wind_events(
 
     # version
     version = get_application_version()
-    
+
     message = (
         time + " ENERGY: high wind events computed using the "
         f"energy_indicators application v{version}."
@@ -913,31 +944,32 @@ def run_high_wind_events(
     w_s = wind_speed(u100, v100)
 
     hwe = high_wind_events(w_s, threshold=25.0)
-    
+
     # Global attrs:
-    hwe.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
-    
+    hwe.attrs = {
+        "resolution": data_u100.attrs["resolution"],
+        "generation": data_u100.attrs["generation"],
+        "activity": data_u100.attrs["activity"],
+        "dataset": data_u100.attrs["dataset"],
+        "stream": data_u100.attrs["stream"],
+        "model": data_u100.attrs["model"],
+        "experiment": data_u100.attrs["experiment"],
+        "levtype": data_u100.attrs["levtype"],
+        "expver": data_u100.attrs["expver"],
+        "class": data_u100.attrs["class"],
+        "type": data_u100.attrs["type"],
+        "realization": data_u100.attrs["realization"],
+    }
+
     # Add mask attribute to global attributes if mask was applied
     if mask is not None:
         hwe.attrs["mask"] = "yes"
 
     hwe.attrs["history"] = history
 
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
-    
+    date = pd.to_datetime(w_s["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
+
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_hwe.nc")
 
     hwe.to_netcdf(path=output_file_path, mode="w")
@@ -945,6 +977,7 @@ def run_high_wind_events(
 
 
 # Low wind events
+
 
 def run_low_wind_events(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
@@ -999,7 +1032,7 @@ def run_low_wind_events(
 
     # version
     version = get_application_version()
-    
+
     message = (
         time + " ENERGY: low wind events computed using the "
         f"energy_indicators application v{version}."
@@ -1013,23 +1046,24 @@ def run_low_wind_events(
     v100 = data_v100["v"][:, 0, :, :]
 
     w_s = wind_speed(u100, v100)
-   
+
     lwe = low_wind_events(w_s, threshold=3.0)
 
     # Global attrs:
-    lwe.attrs = {"resolution": data_u100.attrs["resolution"],
-            "generation": data_u100.attrs["generation"],
-            "activity": data_u100.attrs["activity"],
-            "dataset": data_u100.attrs["dataset"],
-            "stream": data_u100.attrs["stream"],
-            "model": data_u100.attrs["model"],
-            "experiment": data_u100.attrs["experiment"],
-            "levtype": data_u100.attrs["levtype"],
-            "expver": data_u100.attrs["expver"],
-            "class": data_u100.attrs["class"],
-            "type": data_u100.attrs["type"],
-            "realization": data_u100.attrs["realization"]
-            }
+    lwe.attrs = {
+        "resolution": data_u100.attrs["resolution"],
+        "generation": data_u100.attrs["generation"],
+        "activity": data_u100.attrs["activity"],
+        "dataset": data_u100.attrs["dataset"],
+        "stream": data_u100.attrs["stream"],
+        "model": data_u100.attrs["model"],
+        "experiment": data_u100.attrs["experiment"],
+        "levtype": data_u100.attrs["levtype"],
+        "expver": data_u100.attrs["expver"],
+        "class": data_u100.attrs["class"],
+        "type": data_u100.attrs["type"],
+        "realization": data_u100.attrs["realization"],
+    }
 
     # Add mask attribute to global attributes if mask was applied
     if mask is not None:
@@ -1037,8 +1071,8 @@ def run_low_wind_events(
 
     lwe.attrs["history"] = history
 
-    date = pd.to_datetime(w_s['time'].values[0])
-    YYYY_MM_DD = date.strftime('%Y_%m_%d')
+    date = pd.to_datetime(w_s["time"].values[0])
+    YYYY_MM_DD = date.strftime("%Y_%m_%d")
 
     output_file_path = os.path.join(out_path, f"{YYYY_MM_DD}_T00_00_lwe.nc")
 
@@ -1047,6 +1081,7 @@ def run_low_wind_events(
 
 
 # PV potential
+
 
 def run_pv_potential(
     iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None
@@ -1058,26 +1093,21 @@ def run_pv_potential(
     """
 
     # --- Filenames (hourly raw), mirroring existing pattern ---
-    t2_file = (
-        f"{iniyear}_{inimonth}_{iniday}_2t_timestep_60_daily_mean.nc"
-    )
+    t2_file = f"{iniyear}_{inimonth}_{iniday}_2t_timestep_60_daily_mean.nc"
     avg_sdswrf_file = (
         f"{iniyear}_{inimonth}_{iniday}_avg_sdswrf_timestep_60_daily_mean.nc"
     )
-    ws_file = (
-        f"{iniyear}_{inimonth}_{iniday}_10si_timestep_60_daily_mean.nc"
-    )
+    ws_file = f"{iniyear}_{inimonth}_{iniday}_10si_timestep_60_daily_mean.nc"
 
     # --- Absolute paths ---
-    p_t2   = os.path.join(in_path, t2_file)
-    p_avg_sdswrf  = os.path.join(in_path, avg_sdswrf_file)
-    p_ws    = os.path.join(in_path, ws_file)
+    p_t2 = os.path.join(in_path, t2_file)
+    p_avg_sdswrf = os.path.join(in_path, avg_sdswrf_file)
+    p_ws = os.path.join(in_path, ws_file)
 
     # --- Open mandatory datasets ---
     data_t2 = xr.open_dataset(p_t2)
-    data_G  = xr.open_dataset(p_avg_sdswrf)
-    data_ws  = xr.open_dataset(p_ws)
-
+    data_G = xr.open_dataset(p_avg_sdswrf)
+    data_ws = xr.open_dataset(p_ws)
 
     # --- Metadata (same style as other run_* functions) ---
     time = get_time_utc()
@@ -1096,28 +1126,29 @@ def run_pv_potential(
 
     # --- Prepare inputs: 2t in °C and wind speed magnitude ---
     t2k = data_t2["2t"]  # Kelvin
-    G   = data_G["avg_sdswrf"]
-    w_s   = data_ws["10si"]
+    G = data_G["avg_sdswrf"]
+    w_s = data_ws["10si"]
 
     t2c = convert_temperature(t2k, unit="C")
 
     # --- Indicator ---
     from energy_onshore.solar import pv_pot
+
     PVP = pv_pot(t2c, G, w_s)
 
     # --- Global attrs (mirror pattern in other run_* functions) ---
     PVP.attrs = {
-        "resolution":  t2k.attrs["resolution"],
-        "generation":  t2k.attrs["generation"],
-        "activity":    t2k.attrs["activity"],
-        "dataset":     t2k.attrs["dataset"],
-        "stream":      t2k.attrs["stream"],
-        "model":       t2k.attrs["model"],
-        "experiment":  t2k.attrs["experiment"],
-        "levtype":     t2k.attrs["levtype"],
-        "expver":      t2k.attrs["expver"],
-        "class":       t2k.attrs["class"],
-        "type":        t2k.attrs["type"],
+        "resolution": t2k.attrs["resolution"],
+        "generation": t2k.attrs["generation"],
+        "activity": t2k.attrs["activity"],
+        "dataset": t2k.attrs["dataset"],
+        "stream": t2k.attrs["stream"],
+        "model": t2k.attrs["model"],
+        "experiment": t2k.attrs["experiment"],
+        "levtype": t2k.attrs["levtype"],
+        "expver": t2k.attrs["expver"],
+        "class": t2k.attrs["class"],
+        "type": t2k.attrs["type"],
         "realization": t2k.attrs["realization"],
     }
 
@@ -1138,12 +1169,23 @@ def run_pv_potential(
 
 # Capacity factor histogram (OPA)
 
+
 def run_capacity_factor_histogram_opa(
-    iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None, cf_type='I'
+    iniyear,
+    inimonth,
+    iniday,
+    finyear,
+    finmonth,
+    finday,
+    in_path,
+    out_path,
+    mask=None,
+    cf_type="I",
+    nworkers=1,
 ):
     """
 
-    
+
     Parameters
     ----------
     iniyear : string
@@ -1164,6 +1206,8 @@ def run_capacity_factor_histogram_opa(
         path where the output data goes to.
     cf_type : string
         type of capacity factor: I, II, III, S.
+    nworkers : int
+        number of workers to use for parallel processing (if applicable).
 
     Returns
     -------
@@ -1171,18 +1215,18 @@ def run_capacity_factor_histogram_opa(
 
     """
     # Provide the data file name for all variables
-    cf_file = (
-        f"{iniyear}_{inimonth}_{iniday}_T00_00_cf_{cf_type}.nc"
-    )
+    cf_file = f"{iniyear}_{inimonth}_{iniday}_T00_00_cf_{cf_type}.nc"
 
     absolute_path_cf = os.path.join(in_path, cf_file)
 
     data_cf = xr.open_dataset(absolute_path_cf)
 
     cf = data_cf[f"cf_{cf_type.lower()}"]
-            
+
     # Global attrs:
     cf.attrs = data_cf.attrs.copy()
-    
-    print(f'mask in run_energy_indicators python repo {mask}', flush=True)
-    capacity_factor_histogram_opa(cf, in_path, mask=mask, iec_class=f"{cf_type.lower()}")
+
+    print(f"mask in run_energy_indicators python repo {mask}", flush=True)
+    capacity_factor_histogram_opa(
+        cf, in_path, mask=mask, iec_class=f"{cf_type.lower()}", nworkers=nworkers
+    )

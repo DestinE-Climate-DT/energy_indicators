@@ -9,3 +9,7 @@ test:
 .PHONY: lint
 lint:
 	pylint .
+
+.PHONY: format
+ruff:
+	ruff format

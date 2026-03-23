@@ -14,6 +14,7 @@ from .core import get_type
 
 # Define PV potential calculation function
 
+
 def pv_pot(t2c, g, ws):
     """
     Compute the PV potential (PV_pot) based on hourly solar radiation, temperature, and wind speed.
@@ -41,21 +42,22 @@ def pv_pot(t2c, g, ws):
     [2]: https://doi.org/10.1038/ncomms10014
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(t2c) == "DataArray"
-    ), 'The input variable "t2c" is not an xarray.DataArray.'
-    assert (
-        get_type(g) == "DataArray"
-    ), 'The input variable "rsds/avg_sdswrf" is not an xarray.DataArray.'
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws10/10si/sfcWind" is not an xarray.DataArray.'
-
+    assert get_type(t2c) == "DataArray", (
+        'The input variable "t2c" is not an xarray.DataArray.'
+    )
+    assert get_type(g) == "DataArray", (
+        'The input variable "rsds/avg_sdswrf" is not an xarray.DataArray.'
+    )
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws10/10si/sfcWind" is not an xarray.DataArray.'
+    )
 
     # Check input dimensions
     for var, name in zip([t2c, g, ws], ["t2c", "g", "ws"]):
-        assert var.ndim == 3, f"The input variable {name} does not have \
+        assert var.ndim == 3, (
+            f"The input variable {name} does not have \
             the required dimensions (time, lat, lon)."
+        )
 
     # Define PV potential coefficients
     alpha1 = 1.1035e-3  # (W m^-2)^-1
@@ -81,7 +83,9 @@ def pv_pot(t2c, g, ws):
     dims = ("time", "lat", "lon")
 
     # Convert to xarray DataArray
-    pvp = xr.DataArray(pvpot, dims=dims, coords=coords, attrs=attrs, name=attrs["shortname"])
+    pvp = xr.DataArray(
+        pvpot, dims=dims, coords=coords, attrs=attrs, name=attrs["shortname"]
+    )
 
     return pvp
 

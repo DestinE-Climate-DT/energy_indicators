@@ -15,13 +15,14 @@ from scipy.interpolate import PchipInterpolator
 from one_pass.opa import Opa
 import glob
 
-# Internal libraries   
+# Internal libraries
 from energy_onshore.utils import load_turbines
 
 from .core import get_type, select_region, wind_speed, select_point
 from .mask_processing import onshore_mask
 
 # Development of wind energy indicators for the Energy Indicators application.
+
 
 def wind_direction(u, v, mask=None):
     """
@@ -42,19 +43,19 @@ def wind_direction(u, v, mask=None):
         Wind direction in degrees.
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(u) == "DataArray"
-    ), 'The input variable "u" is not an xarray.DataArray.'
-    assert (
-        get_type(v) == "DataArray"
-    ), 'The input variable "v" is not an xarray.DataArray.'
+    assert get_type(u) == "DataArray", (
+        'The input variable "u" is not an xarray.DataArray.'
+    )
+    assert get_type(v) == "DataArray", (
+        'The input variable "v" is not an xarray.DataArray.'
+    )
     # Check the dimensions of the input variables.
     for var in [u, v]:
-        assert (
-            var.ndim == 3
-        ), f'The input variable "{var.name}" does not have the required dimensions (time, lat,\
+        assert var.ndim == 3, (
+            f'The input variable "{var.name}" does not have the required dimensions (time, lat,\
         lon).'
-    
+        )
+
     # Apply the land-sea mask by default.
     if mask is not None:
         u = onshore_mask(u, mask)
@@ -111,18 +112,18 @@ def wind_speed_anomalies(ws, climatology, scale="daily"):
     [1]: https://doi.org/10.1175/JCLI3366.1
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
-    assert (
-        get_type(climatology) == "DataArray"
-    ), 'The input variable "climatology" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
+    assert get_type(climatology) == "DataArray", (
+        'The input variable "climatology" is not an xarray.DataArray.'
+    )
     # Check the dimensions of the input variables.
     for var in [ws, climatology]:
-        assert (
-            var.ndim == 3
-        ), f'The input variable "{var.name}" does not have the required dimensions (time, lat,\
+        assert var.ndim == 3, (
+            f'The input variable "{var.name}" does not have the required dimensions (time, lat,\
         lon).'
+        )
 
     # Extract boundaries of the region of interest.
     latmin = np.round(ws.lat[0].values, 2)
@@ -207,20 +208,20 @@ def wind_power_density(ws, air_density=1.225, mask=None):
     [1]: https://doi.org/10.1016/j.rser.2009.07.028
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     if get_type(air_density) != "float":
-        assert (
-            get_type(air_density) == "DataArray"
-        ), 'The input variable "air_density" is not an xarray.DataArray.'
-        assert (
-            air_density.ndim == 3
-        ), 'The input variable "air_density" does not have the required dimensions (time,lat,lon).'
+        assert get_type(air_density) == "DataArray", (
+            'The input variable "air_density" is not an xarray.DataArray.'
+        )
+        assert air_density.ndim == 3, (
+            'The input variable "air_density" does not have the required dimensions (time,lat,lon).'
+        )
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
     # Apply the land-sea mask by default.
     if mask is not None:
@@ -270,21 +271,21 @@ def wind_speed_at_height(u10, v10, hub_height, alpha=0.143):
     [2]: https://doi.org/10.1175/1520-0450(1994)033<0757:DTPLWP>2.0.CO;2
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(u10) == "DataArray"
-    ), 'The input variable "u10" is not an xarray.DataArray.'
-    assert (
-        get_type(v10) == "DataArray"
-    ), 'The input variable "v10" is not an xarray.DataArray.'
-    assert (
-        get_type(hub_height) == "float"
-    ), 'The input variable "height" is not a float.'
+    assert get_type(u10) == "DataArray", (
+        'The input variable "u10" is not an xarray.DataArray.'
+    )
+    assert get_type(v10) == "DataArray", (
+        'The input variable "v10" is not an xarray.DataArray.'
+    )
+    assert get_type(hub_height) == "float", (
+        'The input variable "height" is not a float.'
+    )
     assert get_type(alpha) == "float", 'The input variable "alpha" is not a float.'
     # Check the dimensions of the input variables.
     for var in [u10, v10]:
-        assert (
-            var.ndim == 3
-        ), f"The input variable {var.name} does not have the required dimensions (time,lat,lon)."
+        assert var.ndim == 3, (
+            f"The input variable {var.name} does not have the required dimensions (time,lat,lon)."
+        )
 
     # Compute the wind speed at the given height.
     ws = wind_speed(u10, v10)
@@ -348,15 +349,15 @@ def power_output(ws, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_
             'The input variable "rated_power" must be a float or an integer.'
         )
     assert get_type(ws) == "ndarray", 'The input variable "ws" is not a numpy.ndarray.'
-    assert (
-        get_type(cut_in_speed) == "float"
-    ), 'The input variable "cut_in_speed" is not a float.'
-    assert (
-        get_type(rated_speed) == "float"
-    ), 'The input variable "rated_speed" is not a float.'
-    assert (
-        get_type(cut_out_speed) == "float"
-    ), 'The input variable "cut_out_speed" is not a float.'
+    assert get_type(cut_in_speed) == "float", (
+        'The input variable "cut_in_speed" is not a float.'
+    )
+    assert get_type(rated_speed) == "float", (
+        'The input variable "rated_speed" is not a float.'
+    )
+    assert get_type(cut_out_speed) == "float", (
+        'The input variable "cut_out_speed" is not a float.'
+    )
     # Check if the IEC class is valid.
     if iec_class not in ["I", "I_II", "II", "II_III", "III", "S"]:
         raise ValueError(
@@ -385,7 +386,7 @@ def power_output(ws, iec_class, rated_power, cut_in_speed, rated_speed, cut_out_
     x_data = power_curve_data.wind_speed.values
     y_data = power_curve_data.power.values
 
-   # Sort data by wind speed to ensure proper interpolation
+    # Sort data by wind speed to ensure proper interpolation
     sort_idx = np.argsort(x_data)
     x_data_sorted = x_data[sort_idx]
     y_data_sorted = y_data[sort_idx]
@@ -456,13 +457,13 @@ def capacity_factor(ws, iec_class, mask=None):
     [1]: https://doi.org/10.1016/j.renene.2019.04.135
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
     # Check if the IEC class is valid.
     if iec_class not in ["I", "I_II", "II", "II_III", "III", "S"]:
@@ -470,7 +471,7 @@ def capacity_factor(ws, iec_class, mask=None):
             "Input argument 'iec_class' must be 'I','I/II','II','II/III', 'III' or 'S'."
         )
 
-    #load available turbines' specifications
+    # load available turbines' specifications
     turbine_class = load_turbines()
 
     iec_to_t = {"I": 0, "I_II": 1, "II": 2, "II_III": 3, "III": 4, "S": 5}
@@ -503,8 +504,11 @@ def capacity_factor(ws, iec_class, mask=None):
     cf = power_out / rated_power
 
     # Add metadata to the output variable.
-    attrs = {"shortname": f'cf_{iec_class.lower()}', \
-        "longname": f"Capacity factor for turbine type {iec_class}", "units": "-"}
+    attrs = {
+        "shortname": f"cf_{iec_class.lower()}",
+        "longname": f"Capacity factor for turbine type {iec_class}",
+        "units": "-",
+    }
     coords = {"time": ws.time, "lat": ws.lat, "lon": ws.lon}
     dims = ("time", "lat", "lon")
 
@@ -513,6 +517,7 @@ def capacity_factor(ws, iec_class, mask=None):
     )
 
     return cf.to_dataset()
+
 
 # Warning: deprecated. CF histograms are computed via the OPA implementation
 # under capacity_factor_histogram_opa().
@@ -542,9 +547,9 @@ def capacity_factor_histogram(ws, bins, iec_class):
     [2]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     assert get_type(bins) == "int", 'The input variable "bins" is not an integer.'
     # Check if the IEC class is valid.
     if iec_class not in ["I", "I_II", "II", "II_III", "III", "S"]:
@@ -552,11 +557,11 @@ def capacity_factor_histogram(ws, bins, iec_class):
             "Input argument 'iec_class' must be 'I','I/II','II','II/III', 'III' or 'S'."
         )
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
-    #load available turbines' specifications
+    # load available turbines' specifications
     turbine_class = load_turbines()
 
     iec_to_t = {"I": 0, "I_II": 1, "II": 2, "II_III": 3, "III": 4, "S": 5}
@@ -646,27 +651,27 @@ def capacity_factor_histogram_1d(ws, bins, target_lon, target_lat, iec_class):
     [1]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     assert get_type(bins) == "int", 'The input variable "bins" is not an integer.'
-    assert (
-        get_type(target_lon) == "float"
-    ), 'The input variable "target_lon" is not a float.'
-    assert (
-        get_type(target_lat) == "float"
-    ), 'The input variable "target_lat" is not a float.'
+    assert get_type(target_lon) == "float", (
+        'The input variable "target_lon" is not a float.'
+    )
+    assert get_type(target_lat) == "float", (
+        'The input variable "target_lat" is not a float.'
+    )
     # Check if the IEC class is valid.
     if iec_class not in ["I", "I_II", "II", "II_III", "III", "S"]:
         raise ValueError(
             "Input argument 'iec_class' must be 'I','I/II','II','II/III', 'III' or 'S'."
         )
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
-    #load available turbines' specifications
+    # load available turbines' specifications
     turbine_class = load_turbines()
 
     iec_to_t = {"I": 0, "I_II": 1, "II": 2, "II_III": 3, "III": 4, "S": 5}
@@ -744,14 +749,14 @@ def wind_speed_histogram(ws, bins):
     [2]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     assert get_type(bins) == "int", 'The input variable "bins" is not an integer.'
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
     # Compute the wind speed histogram.
     def compute_histogram_counts(x):
@@ -772,7 +777,8 @@ def wind_speed_histogram(ws, bins):
     dims = ("lat", "lon")
 
     counts = xr.DataArray(
-        counts, coords=coords,
+        counts,
+        coords=coords,
         dims=dims,
         attrs=attrs,
         name=attrs["shortname"],
@@ -815,20 +821,20 @@ def wind_speed_histogram_1d(ws, bins, target_lon, target_lat):
     [1]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     assert get_type(bins) == "int", 'The input variable "bins" is not an integer.'
-    assert (
-        get_type(target_lon) == "float"
-    ), 'The input variable "target_lon" is not a float.'
-    assert (
-        get_type(target_lat) == "float"
-    ), 'The input variable "target_lat" is not a float.'
+    assert get_type(target_lon) == "float", (
+        'The input variable "target_lon" is not a float.'
+    )
+    assert get_type(target_lat) == "float", (
+        'The input variable "target_lat" is not a float.'
+    )
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
     # Select the wind speed values at the target location.
     ws_target = select_point(ws, target_lon, target_lat)
@@ -861,6 +867,7 @@ def wind_speed_histogram_1d(ws, bins, target_lon, target_lat):
 
     return counts, bin_edges
 
+
 def annual_energy_production_wind(capacity_factor, rated_power, num_turbines=1):
     """
     Compute the annual energy production of a wind turbine from its capacity factor time series.
@@ -884,9 +891,9 @@ def annual_energy_production_wind(capacity_factor, rated_power, num_turbines=1):
     [1]: https://doi.org/10.1016/j.renene.2015.10.006
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(capacity_factor) == "DataArray"
-    ), 'The input variable "capacity_factor_series" is not an xarray.DataArray.'
+    assert get_type(capacity_factor) == "DataArray", (
+        'The input variable "capacity_factor_series" is not an xarray.DataArray.'
+    )
     if not isinstance(rated_power, (float, int)):
         raise TypeError(
             'The input variable "rated_power" must be a float or an integer.'
@@ -894,9 +901,9 @@ def annual_energy_production_wind(capacity_factor, rated_power, num_turbines=1):
     if not isinstance(num_turbines, int):
         raise TypeError('The input variable "num_turbines" must be an integer.')
     # Check the dimensions of the input variables.
-    assert (
-        capacity_factor.ndim == 1
-    ), 'The input variable "capacity_factor" does not have the required dimensions (time).'
+    assert capacity_factor.ndim == 1, (
+        'The input variable "capacity_factor" does not have the required dimensions (time).'
+    )
 
     # Compute the annual energy production.
     aep = capacity_factor * rated_power * num_turbines
@@ -936,15 +943,15 @@ def high_wind_events(ws, threshold=25.0, mask=None):
     [1]: https://iopscience.iop.org/article/10.1088/1748-9326/acbdb2
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     if not isinstance(threshold, (float, int)):
         raise TypeError('The input variable "threshold" must be a float or an integer.')
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
     # Apply the land-sea mask by default.
     if mask is not None:
@@ -990,15 +997,15 @@ def low_wind_events(ws, threshold=3.0, mask=None):
     [1]: https://iopscience.iop.org/article/10.1088/1748-9326/acbdb2
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     if not isinstance(threshold, (float, int)):
         raise TypeError('The input variable "threshold" must be a float or an integer.')
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
     # Apply the land-sea mask by default.
     if mask is not None:
@@ -1044,15 +1051,15 @@ def calm_days(ws, threshold=2.0, mask=None):
     [1]: https://xclim.readthedocs.io/en/stable/indices.html#xclim.indices.calm_days
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     if not isinstance(threshold, (float, int)):
         raise TypeError('The input variable "threshold" must be a float or an integer.')
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
     # Apply the land-sea mask by default.
     if mask is not None:
@@ -1099,15 +1106,15 @@ def windy_days(ws, threshold=10.8, mask=None):
     [1]: https://xclim.readthedocs.io/en/stable/indices.html#xclim.indices.windy_days
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(ws) == "DataArray"
-    ), 'The input variable "ws" is not an xarray.DataArray.'
+    assert get_type(ws) == "DataArray", (
+        'The input variable "ws" is not an xarray.DataArray.'
+    )
     if not isinstance(threshold, (float, int)):
         raise TypeError('The input variable "threshold" must be a float or an integer.')
     # Check the dimensions of the input variables.
-    assert (
-        ws.ndim == 3
-    ), 'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    assert ws.ndim == 3, (
+        'The input variable "ws" does not have the required dimensions (time,lat,lon).'
+    )
 
     # Apply the land-sea mask by default.
     if mask is not None:
@@ -1131,7 +1138,9 @@ def windy_days(ws, threshold=10.8, mask=None):
     return wd.to_dataset()
 
 
-def capacity_factor_histogram_opa(cf, working_dir, mask=None, iec_class='I'):
+def capacity_factor_histogram_opa(
+    cf, working_dir, mask=None, iec_class="I", nworkers=1
+):
     """
     Compute the capacity factor histogram for a given grid.
 
@@ -1153,11 +1162,11 @@ def capacity_factor_histogram_opa(cf, working_dir, mask=None, iec_class='I'):
     """
     # Get data from GSV
 
-    #variable = list(cf.data_vars)[0] # cf_X
-    #print(variable)
+    # variable = list(cf.data_vars)[0] # cf_X
+    # print(variable)
 
     oparequest = {
-        "stat" : "histogram",
+        "stat": "histogram",
         "stat_freq": "monthly",
         "output_freq": "monthly",
         "time_step": 60,
@@ -1165,8 +1174,8 @@ def capacity_factor_histogram_opa(cf, working_dir, mask=None, iec_class='I'):
         "save": True,
         "bins": 30,
         "checkpoint": True,
-        "checkpoint_filepath": f'{working_dir}',
-        "save_filepath": f'{working_dir}',
+        "checkpoint_filepath": f"{working_dir}",
+        "save_filepath": f"{working_dir}",
     }
 
     # Apply mask to data
@@ -1175,13 +1184,11 @@ def capacity_factor_histogram_opa(cf, working_dir, mask=None, iec_class='I'):
 
         files_cf = glob.glob(f"{working_dir}/*cf_{iec_class.upper()}.nc")
 
-        if files_cf==[]:
-            print('No histogram file to be processed.')
+        if files_cf == []:
+            print("No histogram file to be processed.")
         else:
             # find latest file
             latest_file = max(files_cf, key=os.path.getmtime)
-
-
 
         data = xr.open_dataset(latest_file, engine="netcdf4")
         data_attrs = data.attrs
@@ -1189,44 +1196,48 @@ def capacity_factor_histogram_opa(cf, working_dir, mask=None, iec_class='I'):
         mask_data.attrs = data_attrs
         data = apply_mask(data, mask_data)
         data.attrs = data_attrs
-        cf=data
+        cf = data
     else:
         print("No mask applied.")
-        
+
     # Run One Pass algorithm on a specific stat & variable controlled by the oparequest
-    opa_stat = Opa(oparequest)
+    opa_stat = Opa(oparequest, workers=nworkers)
     opa_stat.compute(cf)
-    
+
     if mask is not None and mask.lower() != "none":
         print(f"Applying reshape to original format.")
-        mask_data=xr.open_dataset(mask, engine="netcdf4").mask
+        mask_data = xr.open_dataset(mask, engine="netcdf4").mask
 
         files = glob.glob(f"{working_dir}/*_{iec_class.lower()}_*{oparequest['stat']}*")
 
-        if glob.glob(f"{working_dir}/*_{iec_class.lower()}_*{oparequest['stat']}*"): # if histogram do counts and edges
+        if glob.glob(
+            f"{working_dir}/*_{iec_class.lower()}_*{oparequest['stat']}*"
+        ):  # if histogram do counts and edges
             files_counts = glob.glob(f"{working_dir}/*_{iec_class.lower()}_*counts*.nc")
             files_edges = glob.glob(f"{working_dir}/*_{iec_class.lower()}_*edges*.nc")
-            if files_counts==[] and files_edges==[]:
-                print('No histogram file to be processed.')
+            if files_counts == [] and files_edges == []:
+                print("No histogram file to be processed.")
             else:
-
                 # find latest file
                 latest_counts = max(files_counts, key=os.path.getmtime)
                 latest_edges = max(files_edges, key=os.path.getmtime)
 
                 # load data
-                bin_counts_data = xr.open_dataset(f'{latest_counts}', engine="netcdf4")
-                bin_edges_data = xr.open_dataset(f'{latest_edges}', engine="netcdf4")
+                bin_counts_data = xr.open_dataset(f"{latest_counts}", engine="netcdf4")
+                bin_edges_data = xr.open_dataset(f"{latest_edges}", engine="netcdf4")
 
                 # get original shape and save
                 bin_counts = reshape_final_file(bin_counts_data, mask_data)
                 bin_edges = reshape_final_file(bin_edges_data, mask_data)
                 bin_counts.to_netcdf(f"{latest_counts}_final")
                 bin_edges.to_netcdf(f"{latest_edges}_final")
-                print(f'Histograms final file saved at original shape at {latest_edges} and {latest_counts}.')
+                print(
+                    f"Histograms final file saved at original shape at {latest_edges} and {latest_counts}."
+                )
+
 
 ############## teporary code to speed up the opa, until opa performance improves.
-#================================================================================
+# ================================================================================
 def apply_mask(data, mask):
     """Apply mask to an xarray dataset.
 
@@ -1262,13 +1273,13 @@ def apply_mask(data, mask):
     )
 
     var_name = list(data.variables.keys())[3]
-    if var_name == 'cf_i':
+    if var_name == "cf_i":
         data_flat = data.cf_i.data.flatten()
-    elif var_name == 'cf_ii':
+    elif var_name == "cf_ii":
         data_flat = data.cf_ii.data.flatten()
-    elif var_name == 'cf_iii':
+    elif var_name == "cf_iii":
         data_flat = data.cf_iii.data.flatten()
-    elif var_name == 'cf_s':
+    elif var_name == "cf_s":
         data_flat = data.cf_s.data.flatten()
     else:
         raise ValueError("Variable name not recognised.")
@@ -1293,6 +1304,7 @@ def apply_mask(data, mask):
 
     return masked_data
 
+
 def reshape_final_file(data, mask):
     """Reshape final output file after applying mask into original shape.
 
@@ -1308,42 +1320,44 @@ def reshape_final_file(data, mask):
     reshaped_data
         Reshaped xarray dataarray of shape (time:1, lat:mask.lat lon:mask.lon).
     """
-    #mask=mask_ds.mask
+    # mask=mask_ds.mask
 
-    indices=np.where(mask==1)
+    indices = np.where(mask == 1)
 
-    data_to_insert = data['None'].squeeze('lat').data  # shape (1, dimsize, N)
+    data_to_insert = data["None"].squeeze("lat").data  # shape (1, dimsize, N)
 
-    print(f'data_to_insert: {data_to_insert}')
+    print(f"data_to_insert: {data_to_insert}")
 
-    if 'percentile' in data['None'].dims:
-        dim='percentile'
-        dimsize=1
-    elif 'bin_count' in data['None'].dims:
-        dim='bin_count'
-        dimsize=30
-    elif 'bin_edges' in data['None'].dims:
-        dim='bin_edges'
-        dimsize=31
+    if "percentile" in data["None"].dims:
+        dim = "percentile"
+        dimsize = 1
+    elif "bin_count" in data["None"].dims:
+        dim = "bin_count"
+        dimsize = 30
+    elif "bin_edges" in data["None"].dims:
+        dim = "bin_edges"
+        dimsize = 31
     else:
-        print('Non recognised variable name.')
-    
+        print("Non recognised variable name.")
+
     new_dummy_xarray = xr.DataArray(
-                 np.full((1, dimsize, len(mask.lat), len(mask.lon)), np.nan, dtype=np.float32),  # shape = (time, lat, lon)
-              dims=("time", dim, "lat", "lon"),
-              coords={
-                  "time": 1,
-                  f"{dim}": np.arange(dimsize),               # 0..dimsize
-                  "lat": mask.lat,                  # 0
-                  "lon": mask.lon,    # 0..sum(mask)-1
-              }
+        np.full(
+            (1, dimsize, len(mask.lat), len(mask.lon)), np.nan, dtype=np.float32
+        ),  # shape = (time, lat, lon)
+        dims=("time", dim, "lat", "lon"),
+        coords={
+            "time": 1,
+            f"{dim}": np.arange(dimsize),  # 0..dimsize
+            "lat": mask.lat,  # 0
+            "lon": mask.lon,  # 0..sum(mask)-1
+        },
     )
 
     arr = new_dummy_xarray.data  # direct access to underlying NumPy array
 
-    ilat=indices[0]
+    ilat = indices[0]
 
-    ilon=indices[1]
+    ilon = indices[1]
 
     # vectorized assignment
     arr[:, :, ilat, ilon] = data_to_insert
@@ -1355,12 +1369,12 @@ def reshape_final_file(data, mask):
         arr,
         dims=("time", dim, "lat", "lon"),
         coords={
-            "time": data['None'].time,
-            f'{dim}': new_dummy_xarray[f'{dim}'],
+            "time": data["None"].time,
+            f"{dim}": new_dummy_xarray[f"{dim}"],
             "lat": new_dummy_xarray.lat,
             "lon": new_dummy_xarray.lon,
         },
-        name="filled_data"
+        name="filled_data",
     )
 
     # reduce memory usage

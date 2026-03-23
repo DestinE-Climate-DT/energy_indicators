@@ -12,6 +12,7 @@ import numpy as np
 # Internal libraries
 from .core import get_type
 
+
 def onshore_mask(variable_data, mask_file):
     """
     Apply a geographical onshore mask to a given xarray DataArray using a provided mask file.
@@ -39,17 +40,21 @@ def onshore_mask(variable_data, mask_file):
     BSC Energy Use Case Team (energy-destine@bsc.es) Responsible: Sushovan
     """
     # Check if the input is an xarray DataArray
-    assert get_type(variable_data) == "DataArray", 'The input variable is not an xarray.DataArray.'
+    assert get_type(variable_data) == "DataArray", (
+        "The input variable is not an xarray.DataArray."
+    )
 
     # Extract variable metadata
-    var_name = variable_data.name if variable_data.name is not None else "unknown_variable"
-    var_longname = variable_data.attrs.get('long_name', var_name)
-    var_units = variable_data.attrs.get('units', '')
+    var_name = (
+        variable_data.name if variable_data.name is not None else "unknown_variable"
+    )
+    var_longname = variable_data.attrs.get("long_name", var_name)
+    var_units = variable_data.attrs.get("units", "")
 
     # Ensure longitudes are in -180 to 180 format
     variable_data = variable_data.assign_coords(
         lon=((variable_data.lon + 180) % 360) - 180
-    ).sortby('lon')
+    ).sortby("lon")
 
     # Load mask file
     mask_ds = xr.open_dataset(mask_file)
@@ -60,11 +65,11 @@ def onshore_mask(variable_data, mask_file):
     mask = mask.where(mask != 0)
 
     # Interpolate mask to the variable grid
-    mask_interp =  mask.interp(
+    mask_interp = mask.interp(
         lat=variable_data.lat,
         lon=variable_data.lon,
         method="nearest",
-        kwargs={"fill_value": np.nan}
+        kwargs={"fill_value": np.nan},
     )
 
     # Optional: tighten the mask if needed (to exclude buffer zones)
@@ -74,4 +79,3 @@ def onshore_mask(variable_data, mask_file):
     masked_data = variable_data.where(~np.isnan(mask_interp))
 
     return masked_data
-

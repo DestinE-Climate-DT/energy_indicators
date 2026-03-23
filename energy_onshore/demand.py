@@ -11,6 +11,7 @@ import numpy as np
 from .core import get_type
 from energy_onshore.mask_processing import onshore_mask
 
+
 def cooling_degree_days(tm, tx, tn, base=22.0, mask=None):
     """
     Compute the average cooling degree days. Requires daily mean, maximum and minimum temperature.
@@ -39,29 +40,29 @@ def cooling_degree_days(tm, tx, tn, base=22.0, mask=None):
     [1]: https://doi.org/10.1002/joc.3959
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(tm) == "DataArray"
-    ), 'The input variable "tm" is not an xarray.DataArray.'
-    assert (
-        get_type(tx) == "DataArray"
-    ), 'The input variable "tx" is not an xarray.DataArray.'
-    assert (
-        get_type(tn) == "DataArray"
-    ), 'The input variable "tn" is not an xarray.DataArray.'
+    assert get_type(tm) == "DataArray", (
+        'The input variable "tm" is not an xarray.DataArray.'
+    )
+    assert get_type(tx) == "DataArray", (
+        'The input variable "tx" is not an xarray.DataArray.'
+    )
+    assert get_type(tn) == "DataArray", (
+        'The input variable "tn" is not an xarray.DataArray.'
+    )
     if not isinstance(base, (float, int)):
         raise TypeError('The input variable "base" must be a float or an integer.')
     # Check the dimensions of the input variables.
     for var in [tm, tx, tn]:
-        assert (
-            var.ndim == 3
-        ), f"The input variable {var.name} does not have the required dimensions (time,lat,lon)."
+        assert var.ndim == 3, (
+            f"The input variable {var.name} does not have the required dimensions (time,lat,lon)."
+        )
 
     # Apply the land-sea mask by default.
     if mask is not None:
         tm = onshore_mask(tm, mask)
         tx = onshore_mask(tx, mask)
         tn = onshore_mask(tn, mask)
-         
+
     # Initialize the cooling degree days array.
     cdd = np.zeros_like(tm)
 
@@ -84,7 +85,6 @@ def cooling_degree_days(tm, tx, tn, base=22.0, mask=None):
     cdd = xr.DataArray(
         cdd, coords=coords, dims=dims, attrs=attrs, name=attrs["shortname"]
     )
-
 
     return cdd.to_dataset()
 
@@ -117,22 +117,22 @@ def heating_degree_days(tm, tx, tn, base=15.5, mask=None):
     [1]: https://doi.org/10.1002/joc.3959
     """
     # Check if the input parameters satisfy the required conditions.
-    assert (
-        get_type(tm) == "DataArray"
-    ), 'The input variable "tm" is not an xarray.DataArray.'
-    assert (
-        get_type(tx) == "DataArray"
-    ), 'The input variable "tx" is not an xarray.DataArray.'
-    assert (
-        get_type(tn) == "DataArray"
-    ), 'The input variable "tn" is not an xarray.DataArray.'
+    assert get_type(tm) == "DataArray", (
+        'The input variable "tm" is not an xarray.DataArray.'
+    )
+    assert get_type(tx) == "DataArray", (
+        'The input variable "tx" is not an xarray.DataArray.'
+    )
+    assert get_type(tn) == "DataArray", (
+        'The input variable "tn" is not an xarray.DataArray.'
+    )
     if not isinstance(base, (float, int)):
         raise TypeError('The input variable "base" must be a float or an integer.')
     # Check the dimensions of the input variables.
     for var in [tm, tx, tn]:
-        assert (
-            var.ndim == 3
-        ), f"The input variable {var.name} does not have the required dimensions (time,lat,lon)."
+        assert var.ndim == 3, (
+            f"The input variable {var.name} does not have the required dimensions (time,lat,lon)."
+        )
 
     # Initialize the heating degree days array.
     hdd = np.zeros_like(tm)

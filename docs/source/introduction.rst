@@ -1,3 +1,4 @@
+
 Introduction
 ============
 
@@ -48,4 +49,3 @@ Next Steps
 - See :doc:`how_to_contribute` if you'd like to contribute to the package.
 - Visit the :doc:`about` section to understand the project's goals.
 - Read the :doc:`testing` section to see the unit test coverage.
-

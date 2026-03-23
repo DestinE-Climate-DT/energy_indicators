@@ -212,7 +212,7 @@ def plot_map(
 
 
 # Define the plot_cf function
-def plot_cf(file_paths, output_directory, iec_class='i'):
+def plot_cf(file_paths, output_directory, iec_class="i"):
     """
     Plot capacity factor indicators.
 
@@ -244,7 +244,7 @@ def plot_cf(file_paths, output_directory, iec_class='i'):
                 xmax=1,
                 colormap=cmap_cmocean,
                 label="Capacity Factor (%)",
-                title=f'{category.upper().replace("_", "")} - Daily Mean Capacity Factor ({first_day_date})',
+                title=f"{category.upper().replace('_', '')} - Daily Mean Capacity Factor ({first_day_date})",
                 output_file=output_file,
             )
         except Exception as e:

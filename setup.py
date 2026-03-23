@@ -21,7 +21,7 @@ install_requires = [
     "cartopy==0.23.0",
     "cmocean==4.0.3",
     "pystac==1.10.1",
-    "one-pass @ git+https://earth.bsc.es/gitlab/digital-twins/de_340-2/one_pass.git@v0.9.0#egg=one-pass"
+    "one-pass @ git+https://earth.bsc.es/gitlab/digital-twins/de_340-2/one_pass.git@v0.10.0#egg=one-pass",
 ]
 
 test_requires = ["pytest", "pytest-cov"]
