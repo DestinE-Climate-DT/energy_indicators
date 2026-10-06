@@ -3,7 +3,7 @@ import pandas as pd
 
 import numpy as np
 
-from energy_onshore.core import create_dataset
+from energy_indicators.core import create_dataset
 
 
 def create_template_arrays():

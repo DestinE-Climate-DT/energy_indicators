@@ -1,4 +1,62 @@
 # Changelog
+# v2.1.3 (09/2026)
+
+### Fixed
+
+- `run_nuts_aggregation` applies cosine-latitude weights by default when no weights file is given (computed from the region mask's grid); previously means were coverage-weighted only.
+
+# v2.1.2 (09/2026)
+
+### Fixed
+
+- `aggregate_region` returning NaN for almost all regions when mask and data coordinates differ by floating-point noise
+
+# v2.1.1 (09/2026)
+
+### Changed
+
+- Reduced output floating point resolution for most of the indicators.
+- Wind power density and PV potential are now computed from hourly
+  values and aggregated to a daily mean.
+
+### Fixed
+
+- unit test for `run_daily_cell_temp`
+- Unit tests now use tmp dirs that get automatically deleted.
+
+# v2.1.0 (08/2026)
+
+### Added
+
+- Link to interactive AI-generated wiki.
+- Legal Disclaimer.
+- Documentation rework.
+- New solar indicators: cell temperature.
+- Wind power density (WPD) indicator.
+- `area_weighted_mean` in core.py (cosine-latitude weighted spatial mean).
+- First version of Spatial Aggregation feature
+
+### Changed
+
+- Renamed package call to "energy_indicators" instead of deprecated "energy_onshore" everywhere.
+- CICD pipeline updated & fixed.
+- Merged lwe and hwe in a single one. Added the producing time as an additional variable in the output.
+- Reorganized functions that are unused in operations.
+- Upgraded `select_region` in core.py: handles descending latitudes, `lat`/`lon` vs `latitude`/`longitude` names, 0-360 vs -180/180 longitudes, and cross-antimeridian boxes.
+- `select_point` in core.py now accepts integer as well as float coordinates.
+- `create_dataset` in core.py builds variables, coordinates and attributes in a single step.
+- Removed unused `percentile`, `moving_average`, `temporal_rescaling` and `check_dims` from core.py (and their unit tests).
+- Merged `wind_speed_histogram` / `wind_speed_histogram_1d` and `capacity_factor_histogram` / `capacity_factor_histogram_1d` into single functions with optional `target_lon`/`target_lat` (grid by default, single location when provided). The `_1d` functions were removed.
+
+### Fixed
+
+- Unit tests and global attributes metadata for pvp.
+- `capacity_factor_histogram` (wind.py): `NameError` from an undefined `compute_histogram` call.
+- Minor bug fixes in plot.py.
+- Deprecated pandas resample aliases (`1M`/`1Y`) in `wind_speed_anomalies` (wind.py).
+- Grid histogram functions (wind.py) assigned 2D dims to a 3D counts array; now use `(bins, lat, lon)` / `(bin_edges, lat, lon)`.
+- `capacity_factor_histogram_1d` (wind.py) validated `target_lon`/`target_lat` but histogrammed the whole grid instead of the target point; the merged function now selects the point.
+
 # v2.0.3 (03/2026)
 
 ### Added
@@ -30,7 +88,7 @@
 - Fixed bug in wind_direction function.
 - Removed wind_direction from core.py and added it to wind.py
 - Removed unused spatial_multiprocessing function from core.py
-- Removed hdd_acc and cdd_acc from demand.py and run_energy_onshore.py
+- Removed hdd_acc and cdd_acc from demand.py and run_energy_indicators.py
 - Updated README.md
 - Minor changes to several core scripts.
 - opa dependency to 0.8.2 --> 0.9.0
@@ -38,7 +96,7 @@
 
 
 ### Added
-- Added run_wind_direction function to run_energy_onshore.py
+- Added run_wind_direction function to run_energy_indicators.py
 - Added calm_days and windy_days indicators to wind.py
 - Added tests for calm_days and windy_days indicators.
 - Added tests for run_wind_direction function.
@@ -163,7 +221,7 @@ Version used in the e-suite in first half of 2025.
 # Major (major changes): 
 
 # Minor (new features):
-- unit tests are now extended to `run_energy_onshore.py` by using reduced (10x10) test data coming from real data from gsv and OPA.
+- unit tests are now extended to `run_energy_indicators.py` by using reduced (10x10) test data coming from real data from gsv and OPA.
 - added a pyproject.toml to solve cicd issues.
 - added ploting functions and its tests.
 - added a script to convert the output into stac format to transfer to the datalake eventually.

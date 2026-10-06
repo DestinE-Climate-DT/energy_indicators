@@ -2,7 +2,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
  
-from energy_onshore import power_output
+from energy_indicators import power_output
 
 class_i = {
         "turbine_model": "Enercon E70",

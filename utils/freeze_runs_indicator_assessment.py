@@ -1,5 +1,5 @@
 ```
-Usage:  singularity exec ../../../../../../projects/ehpc01/containers/energy_onshore/energy_onshore_1.0.0.sif python3 my_python_file.py  ../../output/data/  cf_s 1990 2000    
+Usage:  singularity exec ../../../../../../projects/ehpc01/containers/energy_indicators/energy_indicators_1.0.0.sif python3 my_python_file.py  ../../output/data/  cf_s 1990 2000    
 ```
 
 import xarray as xr

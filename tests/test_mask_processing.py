@@ -2,7 +2,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
-from energy_onshore.mask_processing import (
+from energy_indicators.mask_processing import (
     onshore_mask,
 )
 
