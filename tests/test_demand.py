@@ -2,11 +2,11 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
-from energy_onshore import (
+from energy_indicators import (
     cooling_degree_days,
     heating_degree_days,
 )
-from energy_onshore.mask_processing import (
+from energy_indicators.mask_processing import (
     onshore_mask,
 )
 
@@ -25,5 +25,5 @@ def test_heating_degree_days(dataarray_t_c: xr.DataArray):
     tm = t_c.copy()
     tx = t_c + 5
     tn = t_c - 5
-    total = heating_degree_days(tm, tx, tn, base=15.5, mask=None)
+    total = heating_degree_days(tm, tx, tn, base=15.5, mask=None) 
     assert total['hdd'].all() >= 0

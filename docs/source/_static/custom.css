@@ -1,0 +1,21 @@
+/* Make the function signature stand out as the visual anchor */
+dl.py.function > dt,
+dl.py.method > dt,
+dl.py.class > dt {
+    font-size: 1.05em;
+    font-weight: 700;
+    background-color: #f0f4f8;
+    border-left: 3px solid #4a90d9;
+    padding: 6px 10px;
+    border-radius: 3px;
+}
+
+/* Tone down the field-list labels (Parameters/Returns/etc.) so they
+   read as sub-labels, not competing headings */
+dl.field-list > dt {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}

@@ -8,7 +8,7 @@ data/YYYY/MM
 
 2. I added the ID to every month directory: (same as above)
 
-`python3 /home/froura/repositories/energy_onshore/utils/generate_stac_metadata.py . . `
+`python3 /home/froura/repositories/energy_indicators/utils/generate_stac_metadata.py . . `
 
 data/YYYY/MM/EO.XXX.XXX/
 
@@ -21,6 +21,6 @@ ame for collection_cnfig.json
 4. I run the generate_item_metadata.py you provided, with the message:
 
 
-(venv_energy_onshore) (base) froura@bsces109861:~/data/a27y/raw/test$ python3 /home/froura/repositories/DestinE-DataLake-Lab/HDA/Usergenerated/generate_item_metadata_bkp.py
+(venv_energy_indicators) (base) froura@bsces109861:~/data/a27y/raw/test$ python3 /home/froura/repositories/DestinE-DataLake-Lab/HDA/Usergenerated/generate_item_metadata_bkp.py
 Successfully validated stac collection: EO.BSC.DAT.ENERGY_INDICATORS
 

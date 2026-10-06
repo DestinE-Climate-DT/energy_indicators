@@ -1,6 +1,6 @@
 # Energy Indicators (formerly Energy Onshore)
 
-![latest_release](https://earth.bsc.es/gitlab/digital-twins/de_340-2/energy_onshore/-/badges/release.svg)
+![latest_release](https://earth.bsc.es/gitlab/digital-twins/de_340-3/energy_indicators/-/badges/release.svg)
 
 This repository contains the scripts related to the Energy Indicators application, part of the Energy use case of the Climate Change Adaptation Digital Twin (Climate DT). All the work is being developed in the frame of the [Destination Earth initiative](https://destination-earth.eu/) from the European Commission, where [ECMWF](https://destine.ecmwf.int/) is one of the Entrusted Entities.
 
@@ -8,7 +8,9 @@ LICENSE NOTE: the European Union, represented by the European Commission is the 
 
 ## Description
 
-The Energy Indicators application is currently being developed as a Python package, with two core scripts, `wind.py`, containing a comprehensive set of wind energy indicators and `solar.py`, containing a limited set of solar energy indicators, supporting scripts containing auxiliary functions for data pre- and post-processing, `core.py`, and a wrapper script to envelope the whole structure, `run_energy_onshore.py`.
+The Energy Indicators application is currently being developed as a Python package, with two core scripts, `wind.py`, containing a comprehensive set of wind energy indicators and `solar.py`, containing a limited set of solar energy indicators, supporting scripts containing auxiliary functions for data pre- and post-processing, `core.py`, and a wrapper script to envelope the whole structure, `run_energy_indicators.py`.
+
+[Interactive wiki](https://deepwiki.com/DestinE-Climate-DT/energy_indicators) (in a testing stage)
 
 ## Implemented indicators
 
@@ -32,10 +34,8 @@ The Energy Indicators application is currently being developed as a Python packa
     Histogram of wind speed at a given location. Deprecated function, now produced by the one-pass layer.
 - **Annual Energy Production (AEP)** \
     Energy produced by a wind turbine / wind farm over a year.
-- **High Wind Events** \
-    Number of times wind speed exceeds a given threshold.
-- **Low Wind Events** \
-    Number of times wind speed is below a given threshold.
+- **Wind Producing Regimes** \
+    Combined indicator: hours with high wind events, low wind events, and time spent producing energy (wind speed between cut-in and cut-out).
 - **Calm Days** \
     Number of days with wind speed below a given threshold.
 - **Windy Days** \
@@ -91,11 +91,11 @@ Compute the wind power density.
 Compute the capacity factor of a wind turbine.
     - Input:
         - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
-        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
+        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I_II', 'II', 'II_III', 'III', 'S'.
         - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
 
     - Output:
-        - `cf: xarray.DataArray ; (time,lat,lon)` -> Capacity factor.
+        - `cf: xarray.Dataset ; (time,lat,lon)` -> Capacity factor.
 
     - References \
         [1]: https://doi.org/10.1016/j.renene.2019.04.135
@@ -105,11 +105,11 @@ Compute the capacity factor histogram of a wind turbine over a 2D grid.
     - Input:
         - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
         - `bins: int` -> Number of bins.
-        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
+        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I_II', 'II', 'II_III', 'III', 'S'.
     
     - Output:
-        - `counts: xarray.DataArray ; (lat,lon)` -> Number of counts in each bin.
-        - `bin_edges: xarray.DataArray ; (lat,lon)` -> Bin edges.
+        - `counts: xarray.DataArray ; (bins,lat,lon)` -> Number of counts in each bin.
+        - `bin_edges: xarray.DataArray ; (bins+1,lat,lon)` -> Bin edges.
 
     - References \
         [1]: https://doi.org/10.1016/j.renene.2019.04.135
@@ -121,11 +121,11 @@ Compute the capacity factor histogram of a wind turbine at a given location.
         - `bins: int` -> Number of bins.
         - `target_lon: float` -> Longitude of the target location.
         - `target_lat: float` -> Latitude of the target location.
-        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I/II', 'II', 'II/III', 'III', 'S'.
+        - `iec_class: str` -> IEC wind turbine class. Options are 'I','I_II', 'II', 'II_III', 'III', 'S'.
 
     - Output:
-        - counts: xarray.DataArray ; (bins) -> Number of counts in each bin.
-        - bin_edges: xarray.DataArray ; (bins+1) -> Bin edges.
+        - `counts: xarray.DataArray ; (bins)` -> Number of counts in each bin.
+        - `bin_edges: xarray.DataArray ; (bins+1)` -> Bin edges.
 
     - References \
         [1]: https://doi.org/10.1016/j.renene.2019.04.135
@@ -153,8 +153,8 @@ Compute the wind speed histogram at a given location.
         - `target_lat: float` -> Latitude of the target location.
     
     - Output:
-        - `counts: xarray.DataArray ; (bins) -> Number of counts in each bin.
-        - `bin_edges: xarray.DataArray ; (bins+1) -> Bin edges.
+        - `counts: xarray.DataArray ; (bins)` -> Number of counts in each bin.
+        - `bin_edges: xarray.DataArray ; (bins+1)` -> Bin edges.
 
     - References \
         [1]: https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
@@ -172,31 +172,16 @@ Compute the annual energy production of a wind turbine from its capacity factor 
     - References \
         [1]: https://doi.org/10.1016/j.renene.2019.04.135
 
-- **High wind events**: `high_wind_events(ws, threshold=25.0, mask=None)` \
-Compute where and when wind speed exceeds a given threshold (cut-out speed).
+- **Wind producing regimes**: `run_wind_producing_regimes(iniyear, inimonth, iniday, finyear, finmonth, finday, in_path, out_path, mask=None)` \
+Compute high wind events, low wind events, and producing time (wind speed between cut-in and cut-out) from hourly wind speed.
     - Input:
-        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
-        - `threshold: float` -> Wind speed threshold (default: 25.0 m/s). Cut-out speed of the wind turbine.
+        - `iniyear, inimonth, iniday, finyear, finmonth, finday: string` -> Start/end date of the streamed data.
+        - `in_path: string` -> Root path where to get the data from.
+        - `out_path: string` -> Path where the output data goes to.
         - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
 
     - Output:
-        - `hwe: xarray.DataArray ; (lat,lon)` -> Number of high wind events.
-
-    - References \
-        [1]: https://iopscience.iop.org/article/10.1088/1748-9326/acbdb2
-
-- **Low wind events**: `low_wind_events(ws, threshold=3.0, mask=None)` \
-Compute where and when wind speed is below a given threshold (cut-in speed).
-    - Input:
-        - `ws: xarray.DataArray ; (time,lat,lon)` -> Wind speed magnitude at hub height.
-        - `threshold: float` -> Wind speed threshold (default: 3.0 m/s). Cut-in speed of the wind turbine.
-        - `mask: str or None` -> Path to a netCDF file containing a land-sea mask. If provided, the mask will be applied.
-
-    - Output:
-        - `lwe: xarray.DataArray ; (lat,lon)` -> Number of low wind events.
-
-    - References \
-        [1]: https://iopscience.iop.org/article/10.1088/1748-9326/acbdb2
+        - `wpr: xarray.Dataset` -> Single NetCDF file (`{date}_T00_00_wpr.nc`) with three int16 variables: `hwe` (high wind events, threshold 25.0 m/s), `lwe` (low wind events, threshold 3.0 m/s), `producing_time` (number of timesteps with wind speed between 3 and 25 m/s).
 
 - **Cooling degree days**: `cooling_degree_days(tm, tx, tn, base=22.0)` \
 Compute the average cooling degree days. Requires daily mean, maximum and minimum temperature.
@@ -258,35 +243,24 @@ Compute where and when daily average wind speed is above a given threshold (wind
 
 ### Solar energy indicators:
 
-- **Solar Capacity Factor (daily)** \
-    Capacity factor of a PV solar panel at daily scale.
-- **Annual Energy Production (daily)** \
-    Annual energy production of a PV solar panel at daily scale.
+- **PV Potential (PVP)** \
+    Photovoltaic potential based on solar radiation, temperature, and wind speed.
 
 <Details>
 
-- **Solar Capacity Factor (daily)**: `solar_capacity_factor_daily(t2c, rsds)` \
-Compute the capacity factor of a PV solar panel at daily scale.
+- **PV potential**: `pv_pot(t2c, g, ws)` \
+Compute the PV potential based on hourly solar radiation, temperature, and wind speed.
     - Input:
-        - `t2c: xarray.DataArray ; (time,lat,lon)` -> Daily temperature at 2m in °C.
-        - `rsds: xarray.DataArray ; (time,lat,lon)` -> Daily surface solar radiation donwnwards in W m^(-2).
-    
+        - `t2c: xarray.DataArray` -> 2m air temperature in °C.
+        - `g: xarray.DataArray` -> Surface solar radiation downwards (rsds/avg_sdswrf) in W/m².
+        - `ws: xarray.DataArray` -> Surface wind speed (sfcWind) in m/s.
+
     - Output:
-        - `cf_daily: xarray.DataArray ; (time,lat,lon)` -> Daily capacity factor.
+        - `pvp: xarray.Dataset ; (time,lat,lon)` -> PV potential.
 
     - References \
-        [1]: https://doi.org/10.1016/j.renene.2015.10.006 \ 
+        [1]: https://iopscience.iop.org/article/10.1088/1748-9326/ad8c68/meta \
         [2]: https://doi.org/10.1038/ncomms10014
-
-- **Annual Energy Production (daily)**: `annual_energy_production_daily(capacity_factor, rated_power, num_panels=1)` \
-Compute the annual energy production of a PV solar panel.
-    - Input:
-        - `capacity_factor: xarray.DataArray ; (time)` -> Capacity factor time series for a year.
-        - `rated_power: float / int` -> Rated power of the solar panel in kW.
-        - `num_panels: int` -> Number of solar panels. (default: 1)
-
-    - Output:
-        - `aep_daily: xarray.DataArray ; (time)` -> Annual energy production in kWh.
 
 </Details>
 
@@ -299,8 +273,8 @@ Each function/indicator includes a description of its aim, inputs, outputs and c
 
 ```
 import xarray as xr
-from energy_onshore.core import wind_speed
-from energy_onshore import capacity_factor
+from energy_indicators.core import wind_speed
+from energy_indicators import capacity_factor
 
 # Load wind speed data
 path_to_data = 'path/to/data/'
@@ -459,19 +433,27 @@ Next versions will include a visualization module to plot the results of the dif
 
 See `setup.py`.
 
-## Support
+## Maintainers
 
-For any feedback, comments and/or issues you can contact me through Gitlab or directly by email at aleksander.lacima@bsc.es
+This package is developed and maintained by the BSC Earth Sciences energy use case team:
+
+- Aleksander Lacima-Nadolnik
+- Francesc Roura-Adserias
+- Sushovan Ghosh
+- Katherine Grayson
+- Christian Jané-Ippel
+
+For feedback, comments, or issues, please open a GitLab issue, or contact the team at energy-destine@bsc.es.
 
 -------
 To install the necessary dependencies for the package:
 ```
-pip install git+https://earth.bsc.es/gitlab/digital-twins/de_340/energy_onshore.git@main
+pip install git+https://earth.bsc.es/gitlab/digital-twins/de_340-3/energy_indicators.git@main
 ```
 
 To copy the repository to your local directory:
 ```
-git clone https://earth.bsc.es/gitlab/digital-twins/de_340/energy_onshore.git
+git clone https://earth.bsc.es/gitlab/digital-twins/de_340-3/energy_indicators.git
 ```
 
 To install the package locally from the root directory (where the `setup.py` file is located):
@@ -481,16 +463,16 @@ pip install .
 
 To check the version of the package in Python:
 ```
->>> import energy_onshore
->>> energy_onshore.__version__
+>>> import energy_indicators
+>>> energy_indicators.__version__
 ```
 
 If you are installing the demonstrator version from Github:
 
 ```
-pip install git+https://github.com/DestinE-Climate-DT/energy_onshore_demonstrator.git@main
+pip install git+https://github.com/DestinE-Climate-DT/energy_indicators.git@main
 
-git clone https://github.com/DestinE-Climate-DT/energy_onshore_demonstrator.git
+git clone https://github.com/DestinE-Climate-DT/energy_indicators.git
 ```
 
 ## How to test:
@@ -498,7 +480,7 @@ git clone https://github.com/DestinE-Climate-DT/energy_onshore_demonstrator.git
 1. Clone the repository 
 
 ```
-git clone https://earth.bsc.es/gitlab/digital-twins/de_340-2/energy_onshore.git
+git clone https://earth.bsc.es/gitlab/digital-twins/de_340-3/energy_indicators.git
 ```
 
 2. Create a virtual environment
@@ -567,3 +549,11 @@ Follow these instructions https://destine-data-lake-docs.data.destination-earth.
 
 Copyright 2022-2025 European Union (represented by the European Commission)
 The Energy Indicators package is distributed as open-source software under Apache 2.0 License. The copyright owner is the European Union, represented by the European Commission. The development of the Energy Indicators package has been funded by the European Union through Contract DE_340_CSC - Destination Earth Programme Climate Adaptation Digital Twin (Climate DT). Further info can be found at https://destine.ecmwf.int/ and https://destination-earth.eu/
+
+## Legal Disclaimer
+
+- This code is provided for development purposes only and does NOT grant any authorization to access or use third-party resources.
+- This project may include third-party libraries, frameworks, or tools. Users are responsible for complying with the licenses and terms of use of all included third-party resources.
+- Developers and distributors of this code are NOT liable for any legal or technical issues arising from use of third-party resources.
+
+A full list of all the software used, will be updated soon under used_software.txt

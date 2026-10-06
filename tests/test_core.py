@@ -1,21 +1,15 @@
 import numpy as np
-import pytest
 import xarray as xr
 
-from energy_onshore.core import (
+from energy_indicators.core import (
     check_temperature,
     convert_temperature,
     wind_speed,
     cosine_sza_hourly,
-    percentile,
-    moving_average,
-    temporal_rescaling,
     select_region,
-    temporal_rescaling,
     select_point,
     create_dataset,
     get_type,
-    check_dims,
 )
 
 """Tests that correspond to core.py @froura"""
@@ -55,20 +49,6 @@ def test_cosine_sza_hourly(dataarray_u, dataarray_v):
     )
 
 
-def test_percentile(dataarray_t_c):
-    assert percentile(dataarray_t_c, wanted_percentile=float(50), axis=0).all()
-
-
-def test_moving_average(
-    dataarray_t_c, val=1
-):  # TODO: add a warning when val=> than the lenght of the data
-    assert moving_average(dataarray_t_c.data, 1).all()
-
-
-def test_temporal_rescaling(dataarray_t_c, scale="daily"):
-    assert temporal_rescaling(dataarray_t_c, scale="daily").all()
-
-
 def test_select_region(dataarray_t_c, l0l0=[0, 0], l1l1=[1, 1]):
     assert select_region(dataarray_t_c, l0l0, l1l1).all()
     region = select_region(dataarray_t_c, l0l0, l1l1)
@@ -90,11 +70,4 @@ def test_get_type(dataarray_t_c, val1=int(1), val2=float(1)):
     assert get_type(val1) == "int"
     assert get_type(val2) == "float"
     assert get_type(dataarray_t_c) == "DataArray"
-
-
-def test_check_dims(dataarray_t_c):
-    with pytest.raises(ValueError):
-        check_dims(dataarray_t_c)
-    t_c = dataarray_t_c.sel({"variable": "t_c"}, drop=True)
-    assert check_dims(t_c) == None
 

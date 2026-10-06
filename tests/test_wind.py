@@ -2,15 +2,16 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
-from energy_onshore import (
+from energy_indicators import (
     wind_speed_anomalies,
     wind_power_density,
+    daily_wind_power_density,
     wind_speed_at_height,
     power_output,
     capacity_factor,
-    capacity_factor_histogram_1d,
+    capacity_factor_histogram,
     capacity_factor_histogram_opa,
-    wind_speed_histogram_1d,
+    wind_speed_histogram,
     annual_energy_production_wind,
     high_wind_events,
     low_wind_events,
@@ -47,6 +48,24 @@ def test_wind_power_density(dataarray_u: xr.DataArray):
     u = dataarray_u.sel({"variable": "u"}, drop=True)
     u = u.transpose("time", "lat", "lon")
     assert wind_power_density(u).all()
+
+
+def test_daily_wind_power_density(dataarray_u: xr.DataArray):
+    u = dataarray_u.sel({"variable": "u"}, drop=True)
+    u = u.transpose("time", "lat", "lon")
+
+    wpd = wind_power_density(u)
+
+    out = daily_wind_power_density(wpd)
+
+    assert isinstance(out, xr.Dataset)
+    assert "wpd" in out
+    assert (out.wpd >= 0).all()
+
+    # daily mean must match resampling the hourly wpd directly, regardless
+    # of how many timestamps the fixture puts in each calendar day
+    expected = wpd.resample(time="1D").mean(dim="time", skipna=True)
+    xr.testing.assert_allclose(out["wpd"], expected)
 
 
 def test_wind_speed_at_height(dataarray_u: xr.DataArray, dataarray_v: xr.DataArray):
@@ -92,21 +111,28 @@ def test_capacity_factor(dataarray_u: xr.DataArray):
     assert ((cfS >= 0) & (cfS <= 1)).all(), "Some elements are out of the range [0, 1]"
 
 
-def test_capacity_factor_histogram(dataarray_u):
-    pass
-
-def test_capacity_factor_histogram_1d(dataarray_u: xr.DataArray):
+def test_capacity_factor_histogram(dataarray_u: xr.DataArray):
     u = dataarray_u.sel({"variable": "u"}, drop=True)
     u = u.transpose("time", "lat", "lon")
-    assert capacity_factor_histogram_1d(
+    # Single-location histogram.
+    assert capacity_factor_histogram(
         u, bins=5, target_lat=1.0, target_lon=1.0, iec_class="I"
     )
+    # Grid histogram (default): counts has dims (bins, lat, lon).
+    counts, bin_edges = capacity_factor_histogram(u, bins=5, iec_class="I")
+    assert counts.dims == ("bins", "lat", "lon")
+    assert bin_edges.dims == ("bin_edges", "lat", "lon")
 
 
-def test_wind_speed_histogram_1d(dataarray_u: xr.DataArray):
+def test_wind_speed_histogram(dataarray_u: xr.DataArray):
     u = dataarray_u.sel({"variable": "u"}, drop=True)
     u = u.transpose("time", "lat", "lon")
-    assert wind_speed_histogram_1d(u, bins=5, target_lat=1.0, target_lon=1.0)
+    # Single-location histogram.
+    assert wind_speed_histogram(u, bins=5, target_lat=1.0, target_lon=1.0)
+    # Grid histogram (default): counts has dims (bins, lat, lon).
+    counts, bin_edges = wind_speed_histogram(u, bins=5)
+    assert counts.dims == ("bins", "lat", "lon")
+    assert bin_edges.dims == ("bin_edges", "lat", "lon")
 
 
 def test_annual_energy_production_wind(dataarray_u: xr.DataArray):
